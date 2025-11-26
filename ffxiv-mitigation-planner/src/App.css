@@ -1,109 +1,38 @@
-import React, { useState } from 'react';
-import PartyComposition from './components/PartyComposition';
-import AbilityPalette from './components/AbilityPalette';
-import Timeline from './components/Timeline';
-import TimelineControls from './components/TimelineControls';
-import { JOBS } from './data/jobs';
-import { BOSS_TIMELINES, PIXELS_PER_SECOND } from './data/bossTimelines';
-import { checkCooldownConflict, getAvailableAbilities } from './utils/cooldownCalculations';
+.App {
+  text-align: center;
+}
 
-export default function MitigationPlanner() {
-  const [partyComp, setPartyComp] = useState({
-    tank1: 'PLD',
-    tank2: 'WAR',
-    healer1: 'WHM',
-    healer2: 'SCH',
-    dps1: null,
-    dps2: null,
-    dps3: null,
-    dps4: null,
-  });
-  
-  const [placements, setPlacements] = useState([]);
-  const [draggedAbility, setDraggedAbility] = useState(null);
-  const [draggedFrom, setDraggedFrom] = useState(null);
-  const [currentTimeline] = useState('sample-boss');
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
 
-  const timeline = BOSS_TIMELINES[currentTimeline];
-  const availableAbilities = getAvailableAbilities(partyComp, JOBS);
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
 
-  const handleDragStart = (ability, from = 'palette') => {
-    setDraggedAbility(ability);
-    setDraggedFrom(from);
-  };
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
+.App-link {
+  color: #61dafb;
+}
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    if (!draggedAbility) return;
-
-    const timelineRect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - timelineRect.left;
-    const startTime = Math.max(0, Math.round(x / PIXELS_PER_SECOND));
-
-    if (startTime + draggedAbility.duration > timeline.duration) {
-      setDraggedAbility(null);
-      setDraggedFrom(null);
-      return;
-    }
-
-    const hasConflict = checkCooldownConflict(placements, draggedAbility, startTime);
-    
-    if (!hasConflict) {
-      if (draggedFrom === 'palette') {
-        setPlacements([...placements, {
-          ...draggedAbility,
-          startTime,
-          placementId: Date.now() + Math.random(),
-        }]);
-      } else if (draggedFrom === 'timeline') {
-        setPlacements(placements.map(p => 
-          p.placementId === draggedAbility.placementId 
-            ? { ...p, startTime }
-            : p
-        ));
-      }
-    }
-
-    setDraggedAbility(null);
-    setDraggedFrom(null);
-  };
-
-  const removePlacement = (placementId) => {
-    setPlacements(placements.filter(p => p.placementId !== placementId));
-  };
-
-  const clearAll = () => {
-    setPlacements([]);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-7xl mx-auto">
-        <TimelineControls onClearAll={clearAll} />
-        
-        <PartyComposition 
-          partyComp={partyComp} 
-          setPartyComp={setPartyComp} 
-        />
-        
-        <AbilityPalette 
-          abilities={availableAbilities}
-          onDragStart={handleDragStart}
-        />
-        
-        <Timeline
-          timeline={timeline}
-          placements={placements}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          onDragStart={handleDragStart}
-          onRemovePlacement={removePlacement}
-        />
-      </div>
-    </div>
-  );
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

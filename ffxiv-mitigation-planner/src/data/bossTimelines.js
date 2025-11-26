@@ -1,6 +1,6 @@
 export const BOSS_TIMELINES = {
   "sample-boss": {
-    name: "Sample Boss",
+    name: "Sample Boss (Short)",
     duration: 160,
     attacks: [
       { time: 10, name: "Tank Buster", type: "physical" },
@@ -14,6 +14,30 @@ export const BOSS_TIMELINES = {
       { time: 150, name: "Enrage", type: "magical" },
     ],
   },
+  "ultimate-boss": {
+    name: "Ultimate Encounter",
+    duration: 1200,
+    attacks: [
+      { time: 15, name: "Tank Buster", type: "physical" },
+      { time: 30, name: "Raidwide", type: "magical" },
+      { time: 50, name: "Heavy Raidwide", type: "magical" },
+      { time: 180, name: "Phase Transition", type: "magical" },
+      { time: 200, name: "Tank Buster", type: "physical" },
+      { time: 230, name: "Raidwide", type: "magical" },
+      { time: 360, name: "Phase Transition", type: "magical" },
+      { time: 390, name: "Heavy Raidwide", type: "magical" },
+      { time: 420, name: "Tank Buster", type: "physical" },
+      { time: 600, name: "Phase Transition", type: "magical" },
+      { time: 650, name: "Raidwide", type: "magical" },
+      { time: 700, name: "Heavy Raidwide", type: "magical" },
+      { time: 900, name: "Phase Transition", type: "magical" },
+      { time: 950, name: "Tank Buster", type: "physical" },
+      { time: 1000, name: "Raidwide", type: "magical" },
+      { time: 1100, name: "Heavy Raidwide", type: "magical" },
+      { time: 1180, name: "Enrage", type: "magical" },
+    ],
+  },
 };
 
 export const PIXELS_PER_SECOND = 4;
+export const ROW_HEIGHT = 60;

@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import PartyComposition from "./components/PartyComposition";
-import AbilityPalette from "./components/AbilityPalette";
+import PlayerSelector from "./components/PlayerSelector";
+import PlayerAbilities from "./components/PlayerAbilities";
 import Timeline from "./components/Timeline";
 import TimelineControls from "./components/TimelineControls";
 import { JOBS } from "./data/jobs";
 import { BOSS_TIMELINES, PIXELS_PER_SECOND } from "./data/bossTimelines";
 import {
   checkCooldownConflict,
-  getAvailableAbilities,
+  getAbilitiesForSlot,
 } from "./utils/cooldownCalculations";
 
 export default function MitigationPlanner() {
@@ -25,10 +26,19 @@ export default function MitigationPlanner() {
   const [placements, setPlacements] = useState([]);
   const [draggedAbility, setDraggedAbility] = useState(null);
   const [draggedFrom, setDraggedFrom] = useState(null);
-  const [currentTimeline] = useState("sample-boss");
+  const [currentTimeline, setCurrentTimeline] = useState("sample-boss");
+  const [zoom, setZoom] = useState(4);
+  const [selectedSlot, setSelectedSlot] = useState("tank1");
+  const [snapInterval, setSnapInterval] = useState(1); // Snap to nearest second
 
   const timeline = BOSS_TIMELINES[currentTimeline];
-  const availableAbilities = getAvailableAbilities(partyComp, JOBS);
+  const pixelsPerSecond = PIXELS_PER_SECOND * (zoom / 4);
+  const selectedAbilities = getAbilitiesForSlot(partyComp, selectedSlot, JOBS);
+
+  const handleTimelineChange = (newTimeline) => {
+    setCurrentTimeline(newTimeline);
+    setPlacements([]);
+  };
 
   const handleDragStart = (ability, from = "palette") => {
     setDraggedAbility(ability);
@@ -39,13 +49,27 @@ export default function MitigationPlanner() {
     e.preventDefault();
   };
 
-  const handleDrop = (e) => {
+  const snapToGrid = (time) => {
+    return Math.round(time / snapInterval) * snapInterval;
+  };
+
+  const handleDropOnRow = (e, slot) => {
     e.preventDefault();
+    e.stopPropagation();
+
     if (!draggedAbility) return;
 
-    const timelineRect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - timelineRect.left;
-    const startTime = Math.max(0, Math.round(x / PIXELS_PER_SECOND));
+    // Only allow dropping if ability belongs to this slot
+    if (draggedAbility.slot !== slot) {
+      setDraggedAbility(null);
+      setDraggedFrom(null);
+      return;
+    }
+
+    const rowRect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rowRect.left;
+    const rawTime = Math.max(0, x / pixelsPerSecond);
+    const startTime = snapToGrid(rawTime);
 
     if (startTime + draggedAbility.duration > timeline.duration) {
       setDraggedAbility(null);
@@ -95,22 +119,41 @@ export default function MitigationPlanner() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto">
-        <TimelineControls onClearAll={clearAll} />
+        <TimelineControls
+          onClearAll={clearAll}
+          currentTimeline={currentTimeline}
+          onTimelineChange={handleTimelineChange}
+          availableTimelines={BOSS_TIMELINES}
+          zoom={zoom}
+          onZoomChange={setZoom}
+          snapInterval={snapInterval}
+          onSnapIntervalChange={setSnapInterval}
+        />
 
         <PartyComposition partyComp={partyComp} setPartyComp={setPartyComp} />
 
-        <AbilityPalette
-          abilities={availableAbilities}
+        <PlayerSelector
+          partyComp={partyComp}
+          selectedSlot={selectedSlot}
+          onSelectSlot={setSelectedSlot}
+        />
+
+        <PlayerAbilities
+          selectedSlot={selectedSlot}
+          partyComp={partyComp}
+          abilities={selectedAbilities}
           onDragStart={handleDragStart}
         />
 
         <Timeline
           timeline={timeline}
           placements={placements}
+          partyComp={partyComp}
           onDragOver={handleDragOver}
-          onDrop={handleDrop}
+          onDropOnRow={handleDropOnRow}
           onDragStart={handleDragStart}
           onRemovePlacement={removePlacement}
+          pixelsPerSecond={pixelsPerSecond}
         />
       </div>
     </div>
