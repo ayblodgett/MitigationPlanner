@@ -256,7 +256,7 @@ export default function Timeline({
                       dragPreview.slot === slot &&
                       draggedAbility && (
                         <div
-                          className="absolute rounded pointer-events-none"
+                          className="absolute rounded pointer-events-none overflow-hidden"
                           style={{
                             left: `${
                               dragPreview.startTime * pixelsPerSecond
@@ -271,6 +271,21 @@ export default function Timeline({
                             border: "2px dashed #fff",
                           }}
                         >
+                          {/* Sweet spot overlay in preview */}
+                          {draggedAbility.sweetSpotDuration &&
+                            draggedAbility.sweetSpotDuration > 0 && (
+                              <div
+                                className="absolute top-0 left-0 h-full"
+                                style={{
+                                  width: `${
+                                    draggedAbility.sweetSpotDuration *
+                                    pixelsPerSecond
+                                  }px`,
+                                  backgroundColor: "rgba(0, 0, 0, 0.2)",
+                                }}
+                              />
+                            )}
+
                           <div
                             className="px-2 py-1 text-sm font-semibold truncate"
                             style={{ color: "#000" }}
@@ -281,42 +296,63 @@ export default function Timeline({
                       )}
 
                     {/* Placed abilities */}
-                    {slotPlacements.map((placement) => (
-                      <div
-                        key={placement.placementId}
-                        draggable
-                        onDragStart={() => onDragStart(placement, "timeline")}
-                        className="absolute rounded cursor-move group ability-block"
-                        style={{
-                          left: `${placement.startTime * pixelsPerSecond}px`,
-                          width: `${placement.duration * pixelsPerSecond}px`,
-                          top: "10px",
-                          height: "40px",
-                          backgroundColor: placement.color,
-                          color: "#000",
-                          border: checkCooldownConflict(
-                            placements,
-                            placement,
-                            placement.startTime,
-                            placement.placementId
-                          )
-                            ? "2px solid red"
-                            : "none",
-                        }}
-                      >
-                        <div className="px-2 py-1 text-sm font-semibold truncate">
-                          {placement.name}
-                        </div>
-                        <button
-                          onClick={() =>
-                            onRemovePlacement(placement.placementId)
-                          }
-                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-red-600 rounded p-1"
+                    {/* Placed abilities */}
+                    {slotPlacements.map((placement) => {
+                      const hasSweetSpot =
+                        placement.sweetSpotDuration &&
+                        placement.sweetSpotDuration > 0;
+                      const sweetSpotWidth = hasSweetSpot
+                        ? placement.sweetSpotDuration * pixelsPerSecond
+                        : 0;
+
+                      return (
+                        <div
+                          key={placement.placementId}
+                          draggable
+                          onDragStart={() => onDragStart(placement, "timeline")}
+                          className="absolute rounded cursor-move group ability-block overflow-hidden"
+                          style={{
+                            left: `${placement.startTime * pixelsPerSecond}px`,
+                            width: `${placement.duration * pixelsPerSecond}px`,
+                            top: "10px",
+                            height: "40px",
+                            backgroundColor: placement.color,
+                            color: "#000",
+                            border: checkCooldownConflict(
+                              placements,
+                              placement,
+                              placement.startTime,
+                              placement.placementId
+                            )
+                              ? "2px solid red"
+                              : "none",
+                          }}
                         >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    ))}
+                          {/* Sweet spot overlay - darker shade for the first portion */}
+                          {hasSweetSpot && (
+                            <div
+                              className="absolute top-0 left-0 h-full pointer-events-none"
+                              style={{
+                                width: `${sweetSpotWidth}px`,
+                                backgroundColor: "rgba(0, 0, 0, 0.2)", // 20% darker
+                              }}
+                            />
+                          )}
+
+                          <div className="px-2 py-1 text-sm font-semibold truncate relative z-10">
+                            {placement.name}
+                          </div>
+                          <button
+                            onClick={() =>
+                              onRemovePlacement(placement.placementId)
+                            }
+                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-red-600 rounded p-1 z-10"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

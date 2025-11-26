@@ -28,35 +28,48 @@ export function checkCooldownConflict(
   }
 
   // For abilities with multiple charges
-  // Check if we have enough charges available at the requested time
-  let availableCharges = maxCharges;
-  let lastRechargeTime = 0;
+  // Simulate charge usage over time
+  let currentCharges = maxCharges;
+  let lastRechargeCheckTime = 0;
 
-  for (const placement of jobPlacements) {
-    // Calculate how many charges have recharged since last use
-    const timeSinceLastUse = placement.startTime - lastRechargeTime;
-    const rechargedCharges = Math.floor(timeSinceLastUse / ability.cooldown);
-    availableCharges = Math.min(
-      maxCharges,
-      availableCharges + rechargedCharges
-    );
+  // Add the new placement to check into the list temporarily
+  const allPlacements = [
+    ...jobPlacements,
+    { startTime, placementId: "temp" },
+  ].sort((a, b) => a.startTime - b.startTime);
 
-    // Use one charge
-    availableCharges--;
-    lastRechargeTime = placement.startTime;
+  for (const placement of allPlacements) {
+    // Calculate how many charges have recharged since last check
+    const timePassed = placement.startTime - lastRechargeCheckTime;
+    const chargesRecharged = Math.floor(timePassed / ability.cooldown);
 
-    if (availableCharges < 0) {
-      // This shouldn't happen, but if it does, there's a conflict
-      return true;
+    // Add recharged charges, but don't exceed max
+    currentCharges = Math.min(maxCharges, currentCharges + chargesRecharged);
+
+    // Update last recharge check time based on actual recharges
+    if (chargesRecharged > 0) {
+      lastRechargeCheckTime =
+        lastRechargeCheckTime + chargesRecharged * ability.cooldown;
+    }
+
+    // Try to use a charge
+    if (currentCharges > 0) {
+      currentCharges--;
+      // If this is the new placement we're checking, it's valid
+      if (placement.placementId === "temp") {
+        return false; // No conflict
+      }
+    } else {
+      // No charges available
+      if (placement.placementId === "temp") {
+        return true; // Conflict
+      }
+      // If an existing placement has no charge, something is wrong with the data
+      // but we continue to check the new placement
     }
   }
 
-  // Now check if we can place the new ability at startTime
-  const timeSinceLastUse = startTime - lastRechargeTime;
-  const rechargedCharges = Math.floor(timeSinceLastUse / ability.cooldown);
-  availableCharges = Math.min(maxCharges, availableCharges + rechargedCharges);
-
-  return availableCharges <= 0;
+  return false;
 }
 
 export function getAbilitiesForSlot(partyComp, slot, jobs) {
