@@ -29,7 +29,6 @@ export default function MitigationPlanner() {
   const [currentTimeline, setCurrentTimeline] = useState("sample-boss");
   const [zoom, setZoom] = useState(4);
   const [selectedSlot, setSelectedSlot] = useState("tank1");
-  const [snapInterval, setSnapInterval] = useState(1); // Snap to nearest second
 
   const timeline = BOSS_TIMELINES[currentTimeline];
   const pixelsPerSecond = PIXELS_PER_SECOND * (zoom / 4);
@@ -50,7 +49,7 @@ export default function MitigationPlanner() {
   };
 
   const snapToGrid = (time) => {
-    return Math.round(time / snapInterval) * snapInterval;
+    return Math.round(time); // Always snap to nearest second
   };
 
   const handleDropOnRow = (e, slot) => {
@@ -59,7 +58,6 @@ export default function MitigationPlanner() {
 
     if (!draggedAbility) return;
 
-    // Only allow dropping if ability belongs to this slot
     if (draggedAbility.slot !== slot) {
       setDraggedAbility(null);
       setDraggedFrom(null);
@@ -124,10 +122,6 @@ export default function MitigationPlanner() {
           currentTimeline={currentTimeline}
           onTimelineChange={handleTimelineChange}
           availableTimelines={BOSS_TIMELINES}
-          zoom={zoom}
-          onZoomChange={setZoom}
-          snapInterval={snapInterval}
-          onSnapIntervalChange={setSnapInterval}
         />
 
         <PartyComposition partyComp={partyComp} setPartyComp={setPartyComp} />
@@ -154,6 +148,8 @@ export default function MitigationPlanner() {
           onDragStart={handleDragStart}
           onRemovePlacement={removePlacement}
           pixelsPerSecond={pixelsPerSecond}
+          zoom={zoom}
+          onZoomChange={setZoom}
         />
       </div>
     </div>
