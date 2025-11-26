@@ -37,6 +37,23 @@ export const BOSS_TIMELINES = {
       { time: 1180, name: "Enrage", type: "magical" },
     ],
   },
+  "dancing-green": {
+    name: "M5S",
+    duration: 606,
+    attacks: [
+      { time: 14, name: "Deep Cut", type: "magical" },
+      { time: 39, name: "Play A/B Side", type: "magical" },
+      { time: 58, name: "Play A/B Side", type: "magical" },
+      { time: 64, name: "Celebrate Good Times", type: "magical" },
+      { time: 77, name: "Disco Infernal", type: "magical" },
+      { time: 122, name: "Play A/B Side", type: "magical" },
+      { time: 128, name: "Celebrate Good Times", type: "magical" },
+      { time: 135, name: "Deep Cut", type: "magical" },
+      { time: 420, name: "Tank Buster", type: "physical" },
+      { time: 600, name: "Phase Transition", type: "magical" },
+      { time: 606, name: "Enrage", type: "magical" },
+    ],
+  },
 };
 
 export const PIXELS_PER_SECOND = 4;

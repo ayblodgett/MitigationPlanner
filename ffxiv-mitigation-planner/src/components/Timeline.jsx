@@ -12,12 +12,15 @@ export default function Timeline({
   placements,
   partyComp,
   onDragOver,
+  onDragLeave,
   onDropOnRow,
   onDragStart,
   onRemovePlacement,
   pixelsPerSecond,
   zoom,
   onZoomChange,
+  draggedAbility,
+  dragPreview,
 }) {
   const timelineContainerRef = useRef(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -26,7 +29,22 @@ export default function Timeline({
   const timelineWidth = timeline.duration * pixelsPerSecond;
   const labelWidth = 128;
 
-  const markerInterval = timeline.duration > 300 ? 30 : 10;
+  // Dynamic marker interval based on zoom level
+  const getMarkerInterval = () => {
+    const pixelsPerMarker = 100; // Target: ~100 pixels between markers
+    const secondsPerMarker = pixelsPerMarker / pixelsPerSecond;
+
+    // Round to nearest "nice" interval
+    if (secondsPerMarker <= 7.5) return 5;
+    if (secondsPerMarker <= 12.5) return 10;
+    if (secondsPerMarker <= 22.5) return 15;
+    if (secondsPerMarker <= 45) return 30;
+    if (secondsPerMarker <= 90) return 60;
+    if (secondsPerMarker <= 180) return 120;
+    return 300;
+  };
+
+  const markerInterval = getMarkerInterval();
   const timeMarkers = Array.from(
     { length: Math.floor(timeline.duration / markerInterval) + 1 },
     (_, i) => i * markerInterval
@@ -217,6 +235,7 @@ export default function Timeline({
                       }px)`,
                     }}
                     onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
                     onDrop={(e) => onDropOnRow(e, slot)}
                   >
                     {/* Boss attack vertical lines */}
@@ -231,6 +250,35 @@ export default function Timeline({
                         }}
                       />
                     ))}
+
+                    {/* Drag preview - show ghost of where ability will be placed */}
+                    {dragPreview &&
+                      dragPreview.slot === slot &&
+                      draggedAbility && (
+                        <div
+                          className="absolute rounded pointer-events-none"
+                          style={{
+                            left: `${
+                              dragPreview.startTime * pixelsPerSecond
+                            }px`,
+                            width: `${
+                              draggedAbility.duration * pixelsPerSecond
+                            }px`,
+                            top: "10px",
+                            height: "40px",
+                            backgroundColor: draggedAbility.color,
+                            opacity: 0.5,
+                            border: "2px dashed #fff",
+                          }}
+                        >
+                          <div
+                            className="px-2 py-1 text-sm font-semibold truncate"
+                            style={{ color: "#000" }}
+                          >
+                            {draggedAbility.name}
+                          </div>
+                        </div>
+                      )}
 
                     {/* Placed abilities */}
                     {slotPlacements.map((placement) => (
