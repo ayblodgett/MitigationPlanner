@@ -25,7 +25,6 @@ export default function Timeline({
 
   const timelineWidth = timeline.duration * pixelsPerSecond;
   const labelWidth = 128;
-  const attackLabelHeight = 40; // Height for boss attack labels row
 
   const markerInterval = timeline.duration > 300 ? 30 : 10;
   const timeMarkers = Array.from(
@@ -153,54 +152,44 @@ export default function Timeline({
             }
           `}</style>
 
-          {/* Time markers - with clip path */}
+          {/* Time markers with boss attack labels above - with clip path */}
           <div
             className="relative mb-2"
             style={{
-              height: "30px",
+              height: "60px", // Increased height to accommodate labels above
               minWidth: `${timelineWidth + labelWidth}px`,
               clipPath: `inset(0 0 0 ${labelWidth}px)`,
             }}
           >
+            {/* Boss attack labels - positioned above time markers */}
+            {timeline.attacks.map((attack, idx) => (
+              <div
+                key={`attack-${idx}`}
+                className="absolute bg-red-900 px-2 py-1 rounded text-xs whitespace-nowrap"
+                style={{
+                  left: `${attack.time * pixelsPerSecond + labelWidth}px`,
+                  top: "5px",
+                  transform: "translateX(-50%)",
+                }}
+              >
+                {attack.name}
+              </div>
+            ))}
+
+            {/* Time markers - centered except for 0:00 */}
             {timeMarkers.map((time) => (
               <div
                 key={time}
                 className="absolute text-xs text-gray-400"
-                style={{ left: `${time * pixelsPerSecond + labelWidth}px` }}
+                style={{
+                  left: `${time * pixelsPerSecond + labelWidth}px`,
+                  bottom: "5px",
+                  transform: time === 0 ? "none" : "translateX(-50%)", // Don't center 0:00
+                }}
               >
                 {formatTime(time)}
               </div>
             ))}
-          </div>
-
-          {/* Boss attack timeline - separate row above all player rows */}
-          <div
-            className="relative mb-2"
-            style={{ height: `${attackLabelHeight}px` }}
-          >
-            <div
-              className="relative"
-              style={{
-                width: `${timelineWidth}px`,
-                height: `${attackLabelHeight}px`,
-                marginLeft: `${labelWidth}px`,
-              }}
-            >
-              {/* Boss attack labels only (no vertical lines) */}
-              {timeline.attacks.map((attack, idx) => (
-                <div
-                  key={idx}
-                  className="absolute bg-red-900 px-2 py-1 rounded text-xs whitespace-nowrap"
-                  style={{
-                    left: `${attack.time * pixelsPerSecond}px`,
-                    top: "50%",
-                    transform: "translate(-50%, -50%)", // Center the label on the attack time
-                  }}
-                >
-                  {attack.name}
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Timeline rows */}
@@ -230,7 +219,7 @@ export default function Timeline({
                     onDragOver={onDragOver}
                     onDrop={(e) => onDropOnRow(e, slot)}
                   >
-                    {/* Boss attack vertical lines (no labels) */}
+                    {/* Boss attack vertical lines */}
                     {timeline.attacks.map((attack, idx) => (
                       <div
                         key={idx}
@@ -292,13 +281,8 @@ export default function Timeline({
           className="absolute top-0 left-0 pointer-events-none bg-gray-800"
           style={{ width: `${labelWidth}px` }}
         >
-          {/* Empty space for time markers */}
-          <div style={{ height: "30px", marginBottom: "8px" }} />
-
-          {/* Empty space for boss attack row */}
-          <div
-            style={{ height: `${attackLabelHeight}px`, marginBottom: "8px" }}
-          />
+          {/* Empty space for time markers + attack labels */}
+          <div style={{ height: "60px", marginBottom: "8px" }} />
 
           {/* Labels */}
           {PARTY_SLOTS.map((slot) => {
