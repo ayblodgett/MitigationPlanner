@@ -1,4 +1,4 @@
-// Role-wide abilities that all jobs in a role share
+// Shared role ablities
 const ROLE_ABILITIES = {
   Tank: [
     { id: "rampart", name: "Rampart", duration: 20, cooldown: 90 },
@@ -16,8 +16,7 @@ const ROLE_ABILITIES = {
   Magical_Ranged: [{ id: "addle", name: "Addle", duration: 10, cooldown: 90 }],
 };
 
-// Job-specific abilities only
-// TODO: tanks sweet spots
+// Job-specific abilities
 export const JOBS = {
   PLD: {
     name: "Paladin",
@@ -667,7 +666,7 @@ export const JOBS = {
   },
 };
 
-// Helper function to get all abilities for a job (role + job-specific)
+// Get all abilities for a job (role + job-specific)
 export function getJobAbilities(jobId) {
   const job = JOBS[jobId];
   if (!job) return [];

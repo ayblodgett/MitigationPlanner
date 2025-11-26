@@ -46,7 +46,7 @@ export default function MitigationPlanner() {
   };
 
   const snapToGrid = (time) => {
-    return Math.round(time); // Always snap to nearest second
+    return Math.round(time); // Moving abilities on timeline is snapped to 1s
   };
 
   const handleDragOver = (e) => {

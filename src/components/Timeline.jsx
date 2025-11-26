@@ -170,16 +170,15 @@ export default function Timeline({
             }
           `}</style>
 
-          {/* Time markers with boss attack labels above - with clip path */}
           <div
             className="relative mb-2"
             style={{
-              height: "60px", // Increased height to accommodate labels above
+              height: "60px",
               minWidth: `${timelineWidth + labelWidth}px`,
               clipPath: `inset(0 0 0 ${labelWidth}px)`,
             }}
           >
-            {/* Boss attack labels - positioned above time markers */}
+            {/* Boss timeline labels  */}
             {timeline.attacks.map((attack, idx) => (
               <div
                 key={`attack-${idx}`}
@@ -194,7 +193,7 @@ export default function Timeline({
               </div>
             ))}
 
-            {/* Time markers - centered except for 0:00 */}
+            {/* Time markers */}
             {timeMarkers.map((time) => (
               <div
                 key={time}
@@ -202,7 +201,7 @@ export default function Timeline({
                 style={{
                   left: `${time * pixelsPerSecond + labelWidth}px`,
                   bottom: "5px",
-                  transform: time === 0 ? "none" : "translateX(-50%)", // Don't center 0:00
+                  transform: time === 0 ? "none" : "translateX(-50%)", // Don't center 0:00 otherwise it's out of bounds
                 }}
               >
                 {formatTime(time)}
@@ -251,7 +250,7 @@ export default function Timeline({
                       />
                     ))}
 
-                    {/* Drag preview - show ghost of where ability will be placed */}
+                    {/* Click and drag preview */}
                     {dragPreview &&
                       dragPreview.slot === slot &&
                       draggedAbility && (
@@ -271,7 +270,7 @@ export default function Timeline({
                             border: "2px dashed #fff",
                           }}
                         >
-                          {/* Sweet spot overlay in preview */}
+                          {/* Ability sweet spot overlay in preview */}
                           {draggedAbility.sweetSpotDuration &&
                             draggedAbility.sweetSpotDuration > 0 && (
                               <div
@@ -295,7 +294,6 @@ export default function Timeline({
                         </div>
                       )}
 
-                    {/* Placed abilities */}
                     {/* Placed abilities */}
                     {slotPlacements.map((placement) => {
                       const hasSweetSpot =
@@ -328,7 +326,7 @@ export default function Timeline({
                               : "none",
                           }}
                         >
-                          {/* Sweet spot overlay - darker shade for the first portion */}
+                          {/* Ability sweet spot overlay on placed abilities */}
                           {hasSweetSpot && (
                             <div
                               className="absolute top-0 left-0 h-full pointer-events-none"
@@ -360,7 +358,7 @@ export default function Timeline({
           </div>
         </div>
 
-        {/* Frozen label column - overlaid on top with solid background */}
+        {/* Party composition column  */}
         <div
           className="absolute top-0 left-0 pointer-events-none bg-gray-800"
           style={{ width: `${labelWidth}px` }}
