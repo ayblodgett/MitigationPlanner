@@ -27,7 +27,7 @@ export default function MitigationPlanner() {
   const [draggedAbility, setDraggedAbility] = useState(null);
   const [draggedFrom, setDraggedFrom] = useState(null);
   const [dragPreview, setDragPreview] = useState(null);
-  const [currentTimeline, setCurrentTimeline] = useState("sample-boss");
+  const [currentTimeline, setCurrentTimeline] = useState("dancing-green");
   const [zoom, setZoom] = useState(4);
   const [selectedSlot, setSelectedSlot] = useState("tank1");
 
