@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { JOBS, PARTY_SLOTS, SLOT_LABELS } from "../data/jobs";
 
 export default function PartyComposition({ partyComp, setPartyComp }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
   const getSlotRole = (slot) => {
     if (slot.startsWith("tank")) return "Tank";
     if (slot.startsWith("healer")) return "Healer";
@@ -36,39 +39,53 @@ export default function PartyComposition({ partyComp, setPartyComp }) {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 mb-6">
-      <h2 className="text-xl font-semibold mb-3">Party Composition</h2>
-      <div className="grid grid-cols-4 gap-3">
-        {PARTY_SLOTS.map((slot) => {
-          const slotRole = getSlotRole(slot);
-          const jobCategories = getJobsByCategory(slotRole);
-
-          return (
-            <div key={slot}>
-              <label className="block text-sm text-gray-400 mb-1">
-                {SLOT_LABELS[slot]}
-              </label>
-              <select
-                value={partyComp[slot] || ""}
-                onChange={(e) =>
-                  setPartyComp({ ...partyComp, [slot]: e.target.value || null })
-                }
-                className="w-full bg-gray-700 rounded px-3 py-2"
-              >
-                <option value="">None</option>
-                {Object.entries(jobCategories).map(([categoryName, jobs]) => (
-                  <optgroup key={categoryName} label={categoryName}>
-                    {jobs.map(([id, job]) => (
-                      <option key={id} value={id}>
-                        {job.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-          );
-        })}
+      <div
+        className="flex justify-between items-center cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <h2 className="text-xl font-semibold">Party Composition</h2>
+        <button className="hover:bg-gray-700 rounded p-1">
+          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
       </div>
+
+      {isExpanded && (
+        <div className="grid grid-cols-4 gap-3 mt-3">
+          {PARTY_SLOTS.map((slot) => {
+            const slotRole = getSlotRole(slot);
+            const jobCategories = getJobsByCategory(slotRole);
+
+            return (
+              <div key={slot}>
+                <label className="block text-sm text-gray-400 mb-1">
+                  {SLOT_LABELS[slot]}
+                </label>
+                <select
+                  value={partyComp[slot] || ""}
+                  onChange={(e) =>
+                    setPartyComp({
+                      ...partyComp,
+                      [slot]: e.target.value || null,
+                    })
+                  }
+                  className="w-full bg-gray-700 rounded px-3 py-2"
+                >
+                  <option value="">None</option>
+                  {Object.entries(jobCategories).map(([categoryName, jobs]) => (
+                    <optgroup key={categoryName} label={categoryName}>
+                      {jobs.map(([id, job]) => (
+                        <option key={id} value={id}>
+                          {job.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
