@@ -11,7 +11,7 @@ export function useTimelineZoom(containerRef, zoom, onZoomChange, minZoom = 1) {
           e.preventDefault();
 
           const delta = -Math.sign(e.deltaY);
-          const newZoom = Math.max(minZoom, Math.min(15, zoom + delta));
+          const newZoom = Math.max(minZoom, Math.min(19, zoom + delta));
 
           if (newZoom !== zoom) {
             const scrollLeft = container.scrollLeft;

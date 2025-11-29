@@ -134,7 +134,7 @@ export default function Timeline({
         <h2 className="text-xl font-semibold">
           Boss Timeline - {timeline.name}{" "}
           <span className="text-sm text-gray-400">
-            (Ctrl+Scroll to zoom: {zoom}x, Scroll or drag to pan)
+            (Ctrl+Scroll to zoom, scroll or drag to pan)
           </span>
         </h2>
 
