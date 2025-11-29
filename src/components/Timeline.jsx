@@ -64,6 +64,7 @@ export default function Timeline({
   onZoomChange,
   draggedAbility,
   dragPreview,
+  draggedFrom,
   onClearAll,
 }) {
   const timelineContainerRef = useRef(null);
@@ -328,8 +329,11 @@ export default function Timeline({
                               top: "10px",
                               height: "40px",
                               backgroundColor: draggedAbility.color,
-                              opacity: 0.5,
-                              border: "2px dashed #fff",
+                              opacity: draggedFrom === "timeline" ? 1 : 0.5,
+                              border:
+                                draggedFrom === "timeline"
+                                  ? "2px solid white"
+                                  : "2px dashed #fff",
                             }}
                           >
                             {draggedAbility.sweetSpotDuration &&
@@ -347,10 +351,19 @@ export default function Timeline({
                               )}
 
                             <div
-                              className="px-2 py-1 text-sm font-semibold truncate"
-                              style={{ color: "#000" }}
+                              className="px-2 py-0.5 flex flex-col justify-center"
+                              style={{ color: "#000", height: "100%" }}
                             >
-                              {draggedAbility.name}
+                              <div className="text-sm font-semibold truncate">
+                                {draggedAbility.name}
+                              </div>
+                              <div className="text-xs opacity-75">
+                                {formatTime(dragPreview.startTime)} -{" "}
+                                {formatTime(
+                                  dragPreview.startTime +
+                                    draggedAbility.duration
+                                )}
+                              </div>
                             </div>
                           </div>
                         )}
@@ -371,78 +384,127 @@ export default function Timeline({
                         const laneTop = 10 + placement.lane * laneHeight;
                         const actualHeight = laneHeight - 2;
 
+                        // Check if this ability is currently being dragged
+                        const isBeingDragged =
+                          draggedAbility &&
+                          draggedAbility.placementId ===
+                            placement.placementId &&
+                          draggedFrom === "timeline";
+
                         return (
-                          <div
-                            key={placement.placementId}
-                            draggable
-                            onDragStart={() =>
-                              onDragStart(placement, "timeline")
-                            }
-                            onMouseEnter={(e) => {
-                              setHoveredAbility(placement);
-                              const rect =
-                                e.currentTarget.getBoundingClientRect();
-                              setTooltipPosition({
-                                x: rect.left + rect.width / 2,
-                                y: rect.top,
-                              });
-                            }}
-                            onMouseLeave={() => {
-                              setHoveredAbility(null);
-                            }}
-                            className="absolute rounded cursor-move group ability-block overflow-hidden"
-                            style={{
-                              left: `${
-                                placement.startTime * pixelsPerSecond
-                              }px`,
-                              width: `${
-                                placement.duration * pixelsPerSecond
-                              }px`,
-                              top: `${laneTop}px`,
-                              height: `${actualHeight}px`,
-                              backgroundColor: placement.color,
-                              color: "#000",
-                              border: checkCooldownConflict(
-                                placements,
-                                placement,
-                                placement.startTime,
-                                placement.placementId
-                              )
-                                ? "2px solid red"
-                                : "none",
-                            }}
-                          >
-                            {hasSweetSpot && (
+                          <React.Fragment key={placement.placementId}>
+                            {/* Original position ghost (shown when dragging) */}
+                            {isBeingDragged && (
                               <div
-                                className="absolute top-0 left-0 h-full pointer-events-none"
+                                className="absolute rounded overflow-hidden pointer-events-none"
                                 style={{
-                                  width: `${sweetSpotWidth}px`,
-                                  backgroundColor: "rgba(0, 0, 0, 0.2)",
+                                  left: `${
+                                    placement.startTime * pixelsPerSecond
+                                  }px`,
+                                  width: `${
+                                    placement.duration * pixelsPerSecond
+                                  }px`,
+                                  top: `${laneTop}px`,
+                                  height: `${actualHeight}px`,
+                                  backgroundColor: placement.color,
+                                  opacity: 0.3,
+                                  color: "#000",
                                 }}
-                              />
+                              >
+                                {hasSweetSpot && (
+                                  <div
+                                    className="absolute top-0 left-0 h-full"
+                                    style={{
+                                      width: `${sweetSpotWidth}px`,
+                                      backgroundColor: "rgba(0, 0, 0, 0.2)",
+                                    }}
+                                  />
+                                )}
+
+                                <div
+                                  className="px-2 py-0.5 relative z-10 flex flex-col justify-center"
+                                  style={{ height: "100%" }}
+                                >
+                                  <div className="text-sm font-semibold truncate">
+                                    {placement.name}
+                                  </div>
+                                </div>
+                              </div>
                             )}
 
-                            <div className="px-2 py-1 relative z-10">
-                              <div className="text-sm font-semibold truncate">
-                                {placement.name}
-                              </div>
-                              {actualHeight > 25 && (
-                                <div className="text-xs opacity-75">
-                                  {formatTime(placement.startTime)} -{" "}
-                                  {formatTime(endTime)}
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => {
-                                setHoveredAbility(null);
-                                onRemovePlacement(placement.placementId);
+                            {/* Main ability bar */}
+                            <div
+                              draggable
+                              onDragStart={() =>
+                                onDragStart(placement, "timeline")
+                              }
+                              onMouseEnter={(e) => {
+                                setHoveredAbility(placement);
+                                const rect =
+                                  e.currentTarget.getBoundingClientRect();
+                                setTooltipPosition({
+                                  x: rect.left + rect.width / 2,
+                                  y: rect.top,
+                                });
                               }}
-                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-red-600 rounded p-1 z-10"
+                              onMouseLeave={() => {
+                                setHoveredAbility(null);
+                              }}
+                              className="absolute rounded cursor-move group ability-block overflow-hidden"
+                              style={{
+                                left: `${
+                                  placement.startTime * pixelsPerSecond
+                                }px`,
+                                width: `${
+                                  placement.duration * pixelsPerSecond
+                                }px`,
+                                top: `${laneTop}px`,
+                                height: `${actualHeight}px`,
+                                backgroundColor: placement.color,
+                                color: "#000",
+                                border: checkCooldownConflict(
+                                  placements,
+                                  placement,
+                                  placement.startTime,
+                                  placement.placementId
+                                )
+                                  ? "2px solid red"
+                                  : isBeingDragged
+                                  ? "2px solid white"
+                                  : "none",
+                                opacity: isBeingDragged ? 0 : 1,
+                              }}
                             >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
+                              {hasSweetSpot && (
+                                <div
+                                  className="absolute top-0 left-0 h-full pointer-events-none"
+                                  style={{
+                                    width: `${sweetSpotWidth}px`,
+                                    backgroundColor: "rgba(0, 0, 0, 0.2)",
+                                  }}
+                                />
+                              )}
+
+                              <div
+                                className="px-2 py-0.5 relative z-10 flex flex-col justify-center"
+                                style={{ height: "100%" }}
+                              >
+                                <div className="text-sm font-semibold truncate">
+                                  {placement.name}
+                                </div>
+                                {/* Removed timestamp - only show when dragging */}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setHoveredAbility(null);
+                                  onRemovePlacement(placement.placementId);
+                                }}
+                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-red-600 rounded p-1 z-10"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </React.Fragment>
                         );
                       })}
                     </div>

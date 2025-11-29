@@ -324,6 +324,7 @@ export default function MitigationPlanner() {
           onZoomChange={setZoom}
           draggedAbility={draggedAbility}
           dragPreview={dragPreview}
+          draggedFrom={draggedFrom}
           onClearAll={clearAll}
         />
       </div>
