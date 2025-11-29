@@ -1,31 +1,33 @@
 import { useEffect } from "react";
 
-export function useTimelineZoom(containerRef, zoom, onZoomChange) {
+export function useTimelineZoom(containerRef, zoom, onZoomChange, minZoom = 1) {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleWheel = (e) => {
       if (e.target.closest(".timeline-scroll-area")) {
-        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
 
-        const delta = -Math.sign(e.deltaY);
-        const newZoom = Math.max(1, Math.min(8, zoom + delta));
+          const delta = -Math.sign(e.deltaY);
+          const newZoom = Math.max(minZoom, Math.min(15, zoom + delta));
 
-        if (newZoom !== zoom) {
-          const scrollLeft = container.scrollLeft;
-          const scrollWidth = container.scrollWidth;
-          const clientWidth = container.clientWidth;
-          const scrollRatio = scrollLeft / (scrollWidth - clientWidth);
+          if (newZoom !== zoom) {
+            const scrollLeft = container.scrollLeft;
+            const scrollWidth = container.scrollWidth;
+            const clientWidth = container.clientWidth;
+            const scrollRatio = scrollLeft / (scrollWidth - clientWidth);
 
-          onZoomChange(newZoom);
+            onZoomChange(newZoom);
 
-          requestAnimationFrame(() => {
-            const newScrollWidth = container.scrollWidth;
-            const newClientWidth = container.clientWidth;
-            container.scrollLeft =
-              scrollRatio * (newScrollWidth - newClientWidth);
-          });
+            requestAnimationFrame(() => {
+              const newScrollWidth = container.scrollWidth;
+              const newClientWidth = container.clientWidth;
+              container.scrollLeft =
+                scrollRatio * (newScrollWidth - newClientWidth);
+            });
+          }
         }
       }
     };
@@ -35,5 +37,5 @@ export function useTimelineZoom(containerRef, zoom, onZoomChange) {
     return () => {
       container.removeEventListener("wheel", handleWheel);
     };
-  }, [zoom, onZoomChange, containerRef]);
+  }, [zoom, onZoomChange, containerRef, minZoom]);
 }
