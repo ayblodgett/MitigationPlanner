@@ -180,7 +180,7 @@ export default function PlanManager({
         className="hidden"
       />
 
-      {/* Save As Dialog */}
+      {/* Save dialog */}
       {showSaveAsDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">

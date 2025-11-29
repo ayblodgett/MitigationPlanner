@@ -4,5 +4,5 @@ import react from "@vitejs/plugin-react";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: "/MitigationPlanner/", // IMPORTANT for GitHub Pages
+  base: "/MitigationPlanner/", // for GitHub Pages
 });

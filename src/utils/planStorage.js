@@ -49,7 +49,6 @@ export function deletePlan(planId) {
 }
 
 export function generatePlanId(bossId, planName) {
-  // Create a URL-safe ID
   const sanitized = planName.toLowerCase().replace(/[^a-z0-9]/g, "-");
   return `${bossId}-${sanitized}-${Date.now()}`;
 }

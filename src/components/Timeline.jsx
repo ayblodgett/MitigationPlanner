@@ -129,7 +129,7 @@ export default function Timeline({
 
   return (
     <div className="bg-gray-800 rounded-lg p-4">
-      {/* Timeline header with Clear button */}
+      {/* Timeline title & clear button */}
       <div className="flex justify-between items-center mb-3">
         <h2 className="text-xl font-semibold">
           Boss Timeline - {timeline.name}{" "}
@@ -164,7 +164,7 @@ export default function Timeline({
             }
           `}</style>
 
-          {/* Time markers with boss attack labels above - with clip path */}
+          {/* Header row */}
           <div
             className="relative mb-2"
             style={{
@@ -173,7 +173,7 @@ export default function Timeline({
               clipPath: `inset(0 0 0 ${labelWidth}px)`,
             }}
           >
-            {/* Boss attack labels - positioned above time markers with lane stacking */}
+            {/* Boss attack labels */}
             {(() => {
               const attacks = timeline.attacks.map((attack, idx) => ({
                 ...attack,
@@ -250,7 +250,7 @@ export default function Timeline({
               });
             })()}
 
-            {/* Time markers - centered except for 0:00 */}
+            {/* Time markers */}
             {timeMarkers.map((time) => (
               <div
                 key={time}
@@ -285,7 +285,7 @@ export default function Timeline({
                     className="relative mb-1"
                     style={{ height: `${ROW_HEIGHT}px` }}
                   >
-                    {/* Drop zone row */}
+                    {/* Drop zone */}
                     <div
                       className="relative bg-gray-700 rounded"
                       style={{
@@ -313,7 +313,7 @@ export default function Timeline({
                         />
                       ))}
 
-                      {/* Drag preview - show ghost of where ability will be placed */}
+                      {/* Click and drag preview */}
                       {dragPreview &&
                         dragPreview.slot === slot &&
                         draggedAbility && (
@@ -368,7 +368,7 @@ export default function Timeline({
                           </div>
                         )}
 
-                      {/* Placed abilities with lane-based positioning */}
+                      {/* Placed abilities */}
                       {placementsWithLanes.map((placement) => {
                         const hasSweetSpot =
                           placement.sweetSpotDuration &&
@@ -432,7 +432,7 @@ export default function Timeline({
                               </div>
                             )}
 
-                            {/* Main ability bar */}
+                            {/* Ability bar */}
                             <div
                               draggable
                               onDragStart={() =>
@@ -492,7 +492,6 @@ export default function Timeline({
                                 <div className="text-sm font-semibold truncate">
                                   {placement.name}
                                 </div>
-                                {/* Removed timestamp - only show when dragging */}
                               </div>
                               <button
                                 onClick={() => {
@@ -515,12 +514,11 @@ export default function Timeline({
           </div>
         </div>
 
-        {/* Frozen label column - overlaid on top with solid background */}
+        {/* Party comp column */}
         <div
           className="absolute top-0 left-0 pointer-events-none bg-gray-800"
           style={{ width: `${labelWidth}px` }}
         >
-          {/* Empty space for time markers + attack labels */}
           <div style={{ height: "60px", marginBottom: "8px" }} />
 
           {/* Labels */}

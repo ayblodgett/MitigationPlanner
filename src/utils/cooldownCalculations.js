@@ -64,8 +64,7 @@ export function checkCooldownConflict(
       if (placement.placementId === "temp") {
         return true; // Conflict
       }
-      // If an existing placement has no charge, something is wrong with the data
-      // but we continue to check the new placement
+      // If an existing placement has no charge, something exploded
     }
   }
 

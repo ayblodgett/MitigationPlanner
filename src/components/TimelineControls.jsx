@@ -14,10 +14,8 @@ export default function TimelineControls({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        {/* Left: Title */}
         <h1 className="text-3xl font-bold">FFXIV Mitigation Planner</h1>
-
-        {/* Right: Boss selector and Plan management */}
+        {/* Boss selector and plan management */}
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-400">Boss:</label>
