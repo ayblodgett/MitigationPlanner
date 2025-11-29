@@ -29,6 +29,7 @@ export default function MitigationPlanner() {
   const [draggedFrom, setDraggedFrom] = useState(null);
   const [dragPreview, setDragPreview] = useState(null);
   const [isDraggingOnTimeline, setIsDraggingOnTimeline] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
   const [currentTimeline, setCurrentTimeline] = useState("dancing-green");
   const [currentPlanId, setCurrentPlanId] = useState(null);
   const [zoom, setZoom] = useState(4);
@@ -79,9 +80,10 @@ export default function MitigationPlanner() {
     }
   };
 
-  const handleDragStart = (ability, from = "palette") => {
+  const handleDragStart = (ability, from = "palette", clickOffset = 0) => {
     setDraggedAbility(ability);
     setDraggedFrom(from);
+    setDragOffset(clickOffset);
     setIsDraggingOnTimeline(false);
   };
 
@@ -99,8 +101,8 @@ export default function MitigationPlanner() {
       const x = e.clientX - rowRect.left;
       const rawTime = Math.max(0, x / pixelsPerSecond);
 
-      const halfDuration = draggedAbility.duration / 2;
-      const startTime = snapToGrid(rawTime - halfDuration);
+      // Use a drag offset to handle picking up from anything other than midpoint
+      const startTime = snapToGrid(rawTime - dragOffset);
 
       if (
         startTime >= 0 &&
@@ -139,6 +141,7 @@ export default function MitigationPlanner() {
     if (draggedAbility.slot !== slot) {
       setDraggedAbility(null);
       setDraggedFrom(null);
+      setDragOffset(0);
       return;
     }
 
@@ -149,13 +152,13 @@ export default function MitigationPlanner() {
       const rowRect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rowRect.left;
       const rawTime = Math.max(0, x / pixelsPerSecond);
-      const halfDuration = draggedAbility.duration / 2;
-      startTime = Math.max(0, snapToGrid(rawTime - halfDuration));
+      startTime = Math.max(0, snapToGrid(rawTime - dragOffset));
     }
 
     if (startTime + draggedAbility.duration > timeline.duration) {
       setDraggedAbility(null);
       setDraggedFrom(null);
+      setDragOffset(0);
       return;
     }
 
@@ -191,6 +194,7 @@ export default function MitigationPlanner() {
 
     setDraggedAbility(null);
     setDraggedFrom(null);
+    setDragOffset(0);
   };
 
   const removePlacement = (placementId) => {
@@ -218,6 +222,7 @@ export default function MitigationPlanner() {
         if (startTime + draggedAbility.duration > timeline.duration) {
           setDraggedAbility(null);
           setDraggedFrom(null);
+          setDragOffset(0);
           return;
         }
 
@@ -253,6 +258,7 @@ export default function MitigationPlanner() {
 
         setDraggedAbility(null);
         setDraggedFrom(null);
+        setDragOffset(0);
       }
     };
 
@@ -262,6 +268,7 @@ export default function MitigationPlanner() {
         setDraggedFrom(null);
         setDragPreview(null);
         setIsDraggingOnTimeline(false);
+        setDragOffset(0);
       }
     };
 

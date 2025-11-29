@@ -227,7 +227,7 @@ export default function Timeline({
 
               const totalLanes = lanes.length;
               const attacksWithLanes = lanes.flat();
-              const labelHeight = 35 / totalLanes;
+              const labelHeight = totalLanes === 1 ? 20 : 35 / totalLanes; // Use fixed height for single lane
 
               return attacksWithLanes.map((attack) => {
                 const laneTop = 5 + attack.lane * labelHeight;
@@ -241,7 +241,10 @@ export default function Timeline({
                       top: `${laneTop}px`,
                       transform: "translateX(-50%)",
                       fontSize: totalLanes > 2 ? "10px" : "12px",
-                      lineHeight: `${Math.max(12, labelHeight - 4)}px`,
+                      lineHeight:
+                        totalLanes === 1
+                          ? "16px"
+                          : `${Math.max(12, labelHeight - 4)}px`,
                     }}
                   >
                     {attack.name}
@@ -435,9 +438,22 @@ export default function Timeline({
                             {/* Ability bar */}
                             <div
                               draggable
-                              onDragStart={() =>
-                                onDragStart(placement, "timeline")
-                              }
+                              onDragStart={(e) => {
+                                // Hide tooltip when dragging starts
+                                setHoveredAbility(null);
+
+                                // Calculate where on the bar the user clicked
+                                const barRect =
+                                  e.currentTarget.getBoundingClientRect();
+                                const clickX = e.clientX - barRect.left;
+                                const clickOffsetInSeconds =
+                                  clickX / pixelsPerSecond;
+                                onDragStart(
+                                  placement,
+                                  "timeline",
+                                  clickOffsetInSeconds
+                                );
+                              }}
                               onMouseEnter={(e) => {
                                 setHoveredAbility(placement);
                                 const rect =
