@@ -7,6 +7,7 @@ export function useTimelineZoom(containerRef, zoom, onZoomChange, minZoom = 1) {
 
     const handleWheel = (e) => {
       if (e.target.closest(".timeline-scroll-area")) {
+        // Ctrl+Scroll = Zoom
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
 
@@ -28,6 +29,10 @@ export function useTimelineZoom(containerRef, zoom, onZoomChange, minZoom = 1) {
                 scrollRatio * (newScrollWidth - newClientWidth);
             });
           }
+        } else {
+          // Regular scroll = Pan horizontally
+          e.preventDefault();
+          container.scrollLeft += e.deltaY;
         }
       }
     };
