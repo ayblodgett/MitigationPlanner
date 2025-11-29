@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PartyComposition from "./components/PartyComposition";
 import PlayerSelector from "./components/PlayerSelector";
 import PlayerAbilities from "./components/PlayerAbilities";
@@ -10,13 +10,14 @@ import {
   checkCooldownConflict,
   getAbilitiesForSlot,
 } from "./utils/cooldownCalculations";
+import { loadPlan, savePlan } from "./utils/planStorage";
 
 export default function MitigationPlanner() {
   const [partyComp, setPartyComp] = useState({
     tank1: "PLD",
-    tank2: "DRK",
-    healer1: "SCH",
-    healer2: "AST",
+    tank2: "WAR",
+    healer1: "WHM",
+    healer2: "SCH",
     dps1: "DRG",
     dps2: "RDM",
     dps3: "BRD",
@@ -27,7 +28,9 @@ export default function MitigationPlanner() {
   const [draggedAbility, setDraggedAbility] = useState(null);
   const [draggedFrom, setDraggedFrom] = useState(null);
   const [dragPreview, setDragPreview] = useState(null);
+  const [isDraggingOnTimeline, setIsDraggingOnTimeline] = useState(false);
   const [currentTimeline, setCurrentTimeline] = useState("dancing-green");
+  const [currentPlanId, setCurrentPlanId] = useState(null);
   const [zoom, setZoom] = useState(4);
   const [selectedSlot, setSelectedSlot] = useState("tank1");
 
@@ -35,34 +38,70 @@ export default function MitigationPlanner() {
   const pixelsPerSecond = PIXELS_PER_SECOND * (zoom / 4);
   const selectedAbilities = getAbilitiesForSlot(partyComp, selectedSlot, JOBS);
 
+  // Auto-save when placements or party comp changes
+  useEffect(() => {
+    if (currentPlanId) {
+      const planData = loadPlan(currentPlanId);
+      if (planData) {
+        savePlan(currentPlanId, {
+          ...planData,
+          partyComp,
+          placements,
+        });
+      }
+    }
+  }, [placements, partyComp, currentPlanId]);
+
   const handleTimelineChange = (newTimeline) => {
     setCurrentTimeline(newTimeline);
+    setCurrentPlanId(null); // Reset plan when changing boss
     setPlacements([]);
+  };
+
+  const handlePlanChange = (planId) => {
+    if (!planId) {
+      // New unsaved plan
+      setCurrentPlanId(null);
+      setPlacements([]);
+      return;
+    }
+
+    const plan = loadPlan(planId);
+    if (plan) {
+      setCurrentPlanId(planId);
+      setPartyComp(plan.partyComp || partyComp);
+      setPlacements(plan.placements || []);
+
+      // Switch to the boss this plan is for
+      if (plan.bossId !== currentTimeline) {
+        setCurrentTimeline(plan.bossId);
+      }
+    }
   };
 
   const handleDragStart = (ability, from = "palette") => {
     setDraggedAbility(ability);
     setDraggedFrom(from);
+    setIsDraggingOnTimeline(false);
   };
 
   const snapToGrid = (time) => {
-    return Math.round(time); // Moving abilities on timeline is snapped to 1s
+    return Math.round(time);
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
 
-    // Calculate preview position if dragging an ability
+    setIsDraggingOnTimeline(true);
+
     if (draggedAbility) {
       const rowRect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rowRect.left;
       const rawTime = Math.max(0, x / pixelsPerSecond);
 
-      // Center the ability on the cursor position
       const halfDuration = draggedAbility.duration / 2;
       const startTime = snapToGrid(rawTime - halfDuration);
 
-      // Only show preview if within timeline bounds
       if (
         startTime >= 0 &&
         startTime + draggedAbility.duration <= timeline.duration
@@ -78,7 +117,6 @@ export default function MitigationPlanner() {
   };
 
   const handleDragLeave = (e) => {
-    // Clear preview when leaving the timeline
     if (
       e.currentTarget === e.target ||
       !e.currentTarget.contains(e.relatedTarget)
@@ -91,24 +129,29 @@ export default function MitigationPlanner() {
     e.preventDefault();
     e.stopPropagation();
 
-    setDragPreview(null); // Clear preview on drop
+    const previewToUse = dragPreview;
+
+    setDragPreview(null);
+    setIsDraggingOnTimeline(false);
 
     if (!draggedAbility) return;
 
-    // Only allow dropping if ability belongs to this slot
     if (draggedAbility.slot !== slot) {
       setDraggedAbility(null);
       setDraggedFrom(null);
       return;
     }
 
-    const rowRect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rowRect.left;
-    const rawTime = Math.max(0, x / pixelsPerSecond);
-
-    // Center the ability on the cursor position
-    const halfDuration = draggedAbility.duration / 2;
-    const startTime = Math.max(0, snapToGrid(rawTime - halfDuration));
+    let startTime;
+    if (previewToUse && previewToUse.slot === slot) {
+      startTime = previewToUse.startTime;
+    } else {
+      const rowRect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rowRect.left;
+      const rawTime = Math.max(0, x / pixelsPerSecond);
+      const halfDuration = draggedAbility.duration / 2;
+      startTime = Math.max(0, snapToGrid(rawTime - halfDuration));
+    }
 
     if (startTime + draggedAbility.duration > timeline.duration) {
       setDraggedAbility(null);
@@ -116,7 +159,6 @@ export default function MitigationPlanner() {
       return;
     }
 
-    // When moving existing abilities, exclude the ability being moved from conflict check
     const excludeId =
       draggedFrom === "timeline" ? draggedAbility.placementId : null;
     const hasConflict = checkCooldownConflict(
@@ -156,17 +198,101 @@ export default function MitigationPlanner() {
   };
 
   const clearAll = () => {
-    setPlacements([]);
+    if (confirm("Clear all abilities from the timeline?")) {
+      setPlacements([]);
+    }
   };
+
+  // Global drop handler
+  useEffect(() => {
+    const handleGlobalDrop = (e) => {
+      if (isDraggingOnTimeline && draggedAbility && dragPreview) {
+        e.preventDefault();
+
+        const slot = draggedAbility.slot;
+        const startTime = dragPreview.startTime;
+
+        setDragPreview(null);
+        setIsDraggingOnTimeline(false);
+
+        if (startTime + draggedAbility.duration > timeline.duration) {
+          setDraggedAbility(null);
+          setDraggedFrom(null);
+          return;
+        }
+
+        const excludeId =
+          draggedFrom === "timeline" ? draggedAbility.placementId : null;
+        const hasConflict = checkCooldownConflict(
+          placements,
+          draggedAbility,
+          startTime,
+          excludeId
+        );
+
+        if (!hasConflict) {
+          if (draggedFrom === "palette") {
+            setPlacements([
+              ...placements,
+              {
+                ...draggedAbility,
+                startTime,
+                placementId: Date.now() + Math.random(),
+              },
+            ]);
+          } else if (draggedFrom === "timeline") {
+            setPlacements(
+              placements.map((p) =>
+                p.placementId === draggedAbility.placementId
+                  ? { ...p, startTime }
+                  : p
+              )
+            );
+          }
+        }
+
+        setDraggedAbility(null);
+        setDraggedFrom(null);
+      }
+    };
+
+    const handleGlobalDragEnd = (e) => {
+      if (draggedAbility) {
+        setDraggedAbility(null);
+        setDraggedFrom(null);
+        setDragPreview(null);
+        setIsDraggingOnTimeline(false);
+      }
+    };
+
+    document.addEventListener("drop", handleGlobalDrop);
+    document.addEventListener("dragend", handleGlobalDragEnd);
+
+    return () => {
+      document.removeEventListener("drop", handleGlobalDrop);
+      document.removeEventListener("dragend", handleGlobalDragEnd);
+    };
+  }, [
+    isDraggingOnTimeline,
+    draggedAbility,
+    dragPreview,
+    draggedFrom,
+    placements,
+    timeline.duration,
+    pixelsPerSecond,
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto">
         <TimelineControls
-          onClearAll={clearAll}
           currentTimeline={currentTimeline}
           onTimelineChange={handleTimelineChange}
           availableTimelines={BOSS_TIMELINES}
+          currentPlanId={currentPlanId}
+          onPlanChange={handlePlanChange}
+          partyComp={partyComp}
+          placements={placements}
         />
 
         <PartyComposition partyComp={partyComp} setPartyComp={setPartyComp} />
@@ -198,6 +324,7 @@ export default function MitigationPlanner() {
           onZoomChange={setZoom}
           draggedAbility={draggedAbility}
           dragPreview={dragPreview}
+          onClearAll={clearAll}
         />
       </div>
     </div>

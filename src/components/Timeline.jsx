@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { RotateCcw } from "lucide-react";
 import { PARTY_SLOTS } from "../data/jobs";
 import { formatTime } from "../utils/cooldownCalculations";
 import { calculateAbilityLanes } from "../utils/laneCalculations";
@@ -24,6 +25,7 @@ export default function Timeline({
   onZoomChange,
   draggedAbility,
   dragPreview,
+  onClearAll,
 }) {
   const timelineContainerRef = useRef(null);
   const [hoveredAbility, setHoveredAbility] = useState(null);
@@ -58,12 +60,23 @@ export default function Timeline({
 
   return (
     <div className="bg-gray-800 rounded-lg p-4">
-      <h2 className="text-xl font-semibold mb-3">
-        Boss Timeline - {timeline.name}{" "}
-        <span className="text-sm text-gray-400">
-          (Scroll to zoom: {zoom}x, Click and drag to pan)
-        </span>
-      </h2>
+      {/* Timeline header with Clear button */}
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-xl font-semibold">
+          Boss Timeline - {timeline.name}{" "}
+          <span className="text-sm text-gray-400">
+            (Scroll to zoom: {zoom}x, Click and drag to pan)
+          </span>
+        </h2>
+
+        <button
+          onClick={onClearAll}
+          className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded"
+        >
+          <RotateCcw size={16} />
+          Clear Timeline
+        </button>
+      </div>
 
       <div className="relative">
         <div
