@@ -227,19 +227,39 @@ export default function Timeline({
 
               const totalLanes = lanes.length;
               const attacksWithLanes = lanes.flat();
-              const labelHeight = totalLanes === 1 ? 20 : 35 / totalLanes; // Use fixed height for single lane
+              const labelHeight = totalLanes === 1 ? 20 : 35 / totalLanes;
 
               return attacksWithLanes.map((attack) => {
                 const laneTop = 5 + attack.lane * labelHeight;
+
+                // Calculate position, adjusting if it would overflow the right edge
+                const idealLeft = attack.time * pixelsPerSecond + labelWidth;
+                const labelWidth_px = attack.estimatedWidth;
+                const timelineRightEdge = timelineWidth + labelWidth;
+
+                // Check if label would overflow right edge when centered
+                const wouldOverflowRight =
+                  idealLeft + labelWidth_px / 2 > timelineRightEdge;
+
+                let leftPosition, transform;
+                if (wouldOverflowRight) {
+                  // Align right edge of label with timeline right edge
+                  leftPosition = timelineRightEdge;
+                  transform = "translateX(-100%)";
+                } else {
+                  // Center normally ptherwise
+                  leftPosition = idealLeft;
+                  transform = "translateX(-50%)";
+                }
 
                 return (
                   <div
                     key={`attack-${attack.id}`}
                     className="absolute bg-red-900 px-2 py-1 rounded text-xs whitespace-nowrap"
                     style={{
-                      left: `${attack.time * pixelsPerSecond + labelWidth}px`,
+                      left: `${leftPosition}px`,
                       top: `${laneTop}px`,
-                      transform: "translateX(-50%)",
+                      transform: transform,
                       fontSize: totalLanes > 2 ? "10px" : "12px",
                       lineHeight:
                         totalLanes === 1
