@@ -1,4 +1,5 @@
 import React from "react";
+import { formatTime } from "../../utils/cooldownCalculations";
 
 export default function DragPreview({
   dragPreview,
@@ -35,10 +36,16 @@ export default function DragPreview({
         )}
 
       <div
-        className="px-2 py-1 text-sm font-semibold truncate"
-        style={{ color: "#000" }}
+        className="px-2 py-0.5 flex flex-col justify-center"
+        style={{ color: "#000", height: "100%" }}
       >
-        {draggedAbility.name}
+        <div className="text-sm font-semibold truncate">
+          {draggedAbility.name}
+        </div>
+        <div className="text-xs opacity-75">
+          {formatTime(dragPreview.startTime)} -{" "}
+          {formatTime(dragPreview.startTime + draggedAbility.duration)}
+        </div>
       </div>
     </div>
   );

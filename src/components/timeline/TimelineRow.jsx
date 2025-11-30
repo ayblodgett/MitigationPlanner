@@ -1,76 +1,90 @@
 import React from "react";
 import { Trash2 } from "lucide-react";
 import { ROW_HEIGHT } from "../../data/bossTimelines";
-import {
-  checkCooldownConflict,
-  formatTime,
-} from "../../utils/cooldownCalculations";
+import { checkCooldownConflict } from "../../utils/cooldownCalculations";
 
 export default function TimelineRow({
   slot,
-  job,
-  timeline,
   placementsWithLanes,
   pixelsPerSecond,
-  timelineWidth,
-  labelWidth,
-  onDragOver,
-  onDragLeave,
-  onDropOnRow,
   onDragStart,
   onRemovePlacement,
   setHoveredAbility,
   setTooltipPosition,
   placements,
+  draggedAbility,
+  draggedFrom,
 }) {
   return (
-    <div className="relative mb-1" style={{ height: `${ROW_HEIGHT}px` }}>
-      <div
-        className="relative bg-gray-700 rounded"
-        style={{
-          width: `${timelineWidth}px`,
-          height: `${ROW_HEIGHT}px`,
-          marginLeft: `${labelWidth}px`,
-          backgroundImage: `repeating-linear-gradient(90deg, #4a5568 0px, #4a5568 1px, transparent 1px, transparent ${
-            pixelsPerSecond * 5
-          }px)`,
-        }}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={(e) => onDropOnRow(e, slot)}
-      >
-        {/* Boss attack vertical lines */}
-        {timeline.attacks.map((attack, idx) => (
-          <div
-            key={idx}
-            className="absolute w-1 bg-red-500 opacity-30"
-            style={{
-              left: `${attack.time * pixelsPerSecond}px`,
-              top: 0,
-              height: "100%",
-            }}
-          />
-        ))}
+    <>
+      {placementsWithLanes.map((placement) => {
+        const hasSweetSpot =
+          placement.sweetSpotDuration && placement.sweetSpotDuration > 0;
+        const sweetSpotWidth = hasSweetSpot
+          ? placement.sweetSpotDuration * pixelsPerSecond
+          : 0;
 
-        {/* Placed abilities */}
-        {placementsWithLanes.map((placement) => {
-          const hasSweetSpot =
-            placement.sweetSpotDuration && placement.sweetSpotDuration > 0;
-          const sweetSpotWidth = hasSweetSpot
-            ? placement.sweetSpotDuration * pixelsPerSecond
-            : 0;
-          const endTime = placement.startTime + placement.duration;
+        const totalLanes = placement.totalLanes;
+        const laneHeight = (ROW_HEIGHT - 20) / totalLanes;
+        const laneTop = 10 + placement.lane * laneHeight;
+        const actualHeight = laneHeight - 2;
 
-          const totalLanes = placement.totalLanes;
-          const laneHeight = (ROW_HEIGHT - 20) / totalLanes;
-          const laneTop = 10 + placement.lane * laneHeight;
-          const actualHeight = laneHeight - 2;
+        // Check if this ability is currently being dragged
+        const isBeingDragged =
+          draggedAbility &&
+          draggedAbility.placementId === placement.placementId &&
+          draggedFrom === "timeline";
 
-          return (
+        return (
+          <React.Fragment key={placement.placementId}>
+            {/* Original position ghost (shown when dragging) */}
+            {isBeingDragged && (
+              <div
+                className="absolute rounded overflow-hidden pointer-events-none"
+                style={{
+                  left: `${placement.startTime * pixelsPerSecond}px`,
+                  width: `${placement.duration * pixelsPerSecond}px`,
+                  top: `${laneTop}px`,
+                  height: `${actualHeight}px`,
+                  backgroundColor: placement.color,
+                  opacity: 0.3,
+                  color: "#000",
+                }}
+              >
+                {hasSweetSpot && (
+                  <div
+                    className="absolute top-0 left-0 h-full"
+                    style={{
+                      width: `${sweetSpotWidth}px`,
+                      backgroundColor: "rgba(0, 0, 0, 0.2)",
+                    }}
+                  />
+                )}
+
+                <div
+                  className="px-2 py-0.5 relative z-10 flex flex-col justify-center"
+                  style={{ height: "100%" }}
+                >
+                  <div className="text-sm font-semibold truncate">
+                    {placement.name}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Ability bar */}
             <div
-              key={placement.placementId}
               draggable
-              onDragStart={() => onDragStart(placement, "timeline")}
+              onDragStart={(e) => {
+                // Hide tooltip when dragging starts
+                setHoveredAbility(null);
+
+                // Calculate where on the bar the user clicked
+                const barRect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - barRect.left;
+                const clickOffsetInSeconds = clickX / pixelsPerSecond;
+                onDragStart(placement, "timeline", clickOffsetInSeconds);
+              }}
               onMouseEnter={(e) => {
                 setHoveredAbility(placement);
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -79,7 +93,9 @@ export default function TimelineRow({
                   y: rect.top,
                 });
               }}
-              onMouseLeave={() => setHoveredAbility(null)}
+              onMouseLeave={() => {
+                setHoveredAbility(null);
+              }}
               className="absolute rounded cursor-move group ability-block overflow-hidden"
               style={{
                 left: `${placement.startTime * pixelsPerSecond}px`,
@@ -95,7 +111,10 @@ export default function TimelineRow({
                   placement.placementId
                 )
                   ? "2px solid red"
+                  : isBeingDragged
+                  ? "2px solid white"
                   : "none",
+                opacity: isBeingDragged ? 0 : 1,
               }}
             >
               {hasSweetSpot && (
@@ -108,15 +127,13 @@ export default function TimelineRow({
                 />
               )}
 
-              <div className="px-2 py-1 relative z-10">
+              <div
+                className="px-2 py-0.5 relative z-10 flex flex-col justify-center"
+                style={{ height: "100%" }}
+              >
                 <div className="text-sm font-semibold truncate">
                   {placement.name}
                 </div>
-                {actualHeight > 25 && (
-                  <div className="text-xs opacity-75">
-                    {formatTime(placement.startTime)} - {formatTime(endTime)}
-                  </div>
-                )}
               </div>
               <button
                 onClick={() => {
@@ -128,9 +145,9 @@ export default function TimelineRow({
                 <Trash2 size={12} />
               </button>
             </div>
-          );
-        })}
-      </div>
-    </div>
+          </React.Fragment>
+        );
+      })}
+    </>
   );
 }
