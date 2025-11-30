@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { JOBS, PARTY_SLOTS, SLOT_LABELS } from "../data/jobs";
 
@@ -12,30 +12,33 @@ export default function PartyComposition({ partyComp, setPartyComp }) {
     return null;
   };
 
-  const getJobsByCategory = (slotRole) => {
-    if (slotRole === "Tank") {
-      return {
-        Tanks: Object.entries(JOBS).filter(([_, job]) => job.role === "Tank"),
-      };
-    } else if (slotRole === "Healer") {
-      return {
-        Healers: Object.entries(JOBS).filter(
-          ([_, job]) => job.role === "Healer"
-        ),
-      };
-    } else if (slotRole === "DPS") {
-      return {
-        Melee: Object.entries(JOBS).filter(([_, job]) => job.role === "Melee"),
-        "Physical Ranged": Object.entries(JOBS).filter(
-          ([_, job]) => job.role === "Physical_Ranged"
-        ),
-        "Magical Ranged": Object.entries(JOBS).filter(
-          ([_, job]) => job.role === "Magical_Ranged"
-        ),
-      };
-    }
-    return {};
-  };
+  const getJobsByCategory = useMemo(() => {
+    const tanks = Object.entries(JOBS).filter(
+      ([_, job]) => job.role === "Tank"
+    );
+    const healers = Object.entries(JOBS).filter(
+      ([_, job]) => job.role === "Healer"
+    );
+    const melee = Object.entries(JOBS).filter(
+      ([_, job]) => job.role === "Melee"
+    );
+    const physicalRanged = Object.entries(JOBS).filter(
+      ([_, job]) => job.role === "Physical_Ranged"
+    );
+    const magicalRanged = Object.entries(JOBS).filter(
+      ([_, job]) => job.role === "Magical_Ranged"
+    );
+
+    return {
+      Tank: { Tanks: tanks },
+      Healer: { Healers: healers },
+      DPS: {
+        Melee: melee,
+        "Physical Ranged": physicalRanged,
+        "Magical Ranged": magicalRanged,
+      },
+    };
+  }, []);
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 mb-6">
@@ -53,7 +56,7 @@ export default function PartyComposition({ partyComp, setPartyComp }) {
         <div className="grid grid-cols-4 gap-3 mt-3">
           {PARTY_SLOTS.map((slot) => {
             const slotRole = getSlotRole(slot);
-            const jobCategories = getJobsByCategory(slotRole);
+            const jobCategories = getJobsByCategory[slotRole] || {};
 
             return (
               <div key={slot}>

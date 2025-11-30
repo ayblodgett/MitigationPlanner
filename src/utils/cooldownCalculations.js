@@ -1,5 +1,49 @@
 import { getJobAbilities } from "../data/jobs";
 
+/**
+ * Simulates charge usage over time for multi-charge abilities
+ * @param {Array} sortedPlacements - Placements sorted by startTime
+ * @param {Object} ability - Ability with charges and cooldown
+ * @param {number} maxCharges - Maximum number of charges
+ * @returns {boolean} - True if all placements can be executed, false if conflict
+ */
+function simulateChargeUsage(sortedPlacements, ability, maxCharges) {
+  let currentCharges = maxCharges;
+  let lastRechargeCheckTime = 0;
+
+  for (const placement of sortedPlacements) {
+    // Calculate how many charges have recharged since last check
+    const timePassed = placement.startTime - lastRechargeCheckTime;
+    const chargesRecharged = Math.floor(timePassed / ability.cooldown);
+
+    // Add recharged charges, but don't exceed max
+    currentCharges = Math.min(maxCharges, currentCharges + chargesRecharged);
+
+    // Update last recharge check time based on actual recharges
+    if (chargesRecharged > 0) {
+      lastRechargeCheckTime =
+        lastRechargeCheckTime + chargesRecharged * ability.cooldown;
+    }
+
+    // Try to use a charge
+    if (currentCharges > 0) {
+      currentCharges--;
+      // If this is the new placement we're checking, it's valid
+      if (placement.placementId === "temp") {
+        return false; // No conflict
+      }
+    } else {
+      // No charges available
+      if (placement.placementId === "temp") {
+        return true; // Conflict - no charge available
+      }
+      // If an existing placement has no charge something exploded
+    }
+  }
+
+  return false;
+}
+
 export function checkCooldownConflict(
   placements,
   ability,
@@ -27,48 +71,14 @@ export function checkCooldownConflict(
     return false;
   }
 
-  // For abilities with multiple charges
-  // Simulate charge usage over time
-  let currentCharges = maxCharges;
-  let lastRechargeCheckTime = 0;
-
+  // For abilities with multiple charges - simulate charge usage
   // Add the new placement to check into the list temporarily
   const allPlacements = [
     ...jobPlacements,
     { startTime, placementId: "temp" },
   ].sort((a, b) => a.startTime - b.startTime);
 
-  for (const placement of allPlacements) {
-    // Calculate how many charges have recharged since last check
-    const timePassed = placement.startTime - lastRechargeCheckTime;
-    const chargesRecharged = Math.floor(timePassed / ability.cooldown);
-
-    // Add recharged charges, but don't exceed max
-    currentCharges = Math.min(maxCharges, currentCharges + chargesRecharged);
-
-    // Update last recharge check time based on actual recharges
-    if (chargesRecharged > 0) {
-      lastRechargeCheckTime =
-        lastRechargeCheckTime + chargesRecharged * ability.cooldown;
-    }
-
-    // Try to use a charge
-    if (currentCharges > 0) {
-      currentCharges--;
-      // If this is the new placement we're checking, it's valid
-      if (placement.placementId === "temp") {
-        return false; // No conflict
-      }
-    } else {
-      // No charges available
-      if (placement.placementId === "temp") {
-        return true; // Conflict
-      }
-      // If an existing placement has no charge, something exploded
-    }
-  }
-
-  return false;
+  return simulateChargeUsage(allPlacements, ability, maxCharges);
 }
 
 export function getAbilitiesForSlot(partyComp, slot, jobs) {

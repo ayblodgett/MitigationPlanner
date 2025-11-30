@@ -55,13 +55,12 @@ export default function MitigationPlanner() {
 
   const handleTimelineChange = (newTimeline) => {
     setCurrentTimeline(newTimeline);
-    setCurrentPlanId(null); // Reset plan when changing boss
+    setCurrentPlanId(null);
     setPlacements([]);
   };
 
   const handlePlanChange = (planId) => {
     if (!planId) {
-      // New unsaved plan
       setCurrentPlanId(null);
       setPlacements([]);
       return;
@@ -73,7 +72,6 @@ export default function MitigationPlanner() {
       setPartyComp(plan.partyComp || partyComp);
       setPlacements(plan.placements || []);
 
-      // Switch to the boss this plan is for
       if (plan.bossId !== currentTimeline) {
         setCurrentTimeline(plan.bossId);
       }
@@ -91,6 +89,49 @@ export default function MitigationPlanner() {
     return Math.round(time);
   };
 
+  // Extracted function to handle placement logic (eliminates duplication)
+  const completePlacement = (startTime, slot) => {
+    if (!draggedAbility || draggedAbility.slot !== slot) {
+      return false;
+    }
+
+    if (startTime + draggedAbility.duration > timeline.duration) {
+      return false;
+    }
+
+    const excludeId =
+      draggedFrom === "timeline" ? draggedAbility.placementId : null;
+    const hasConflict = checkCooldownConflict(
+      placements,
+      draggedAbility,
+      startTime,
+      excludeId
+    );
+
+    if (!hasConflict) {
+      if (draggedFrom === "palette") {
+        setPlacements([
+          ...placements,
+          {
+            ...draggedAbility,
+            startTime,
+            placementId: Date.now() + Math.random(),
+          },
+        ]);
+      } else if (draggedFrom === "timeline") {
+        setPlacements(
+          placements.map((p) =>
+            p.placementId === draggedAbility.placementId
+              ? { ...p, startTime }
+              : p
+          )
+        );
+      }
+      return true;
+    }
+    return false;
+  };
+
   const handleDragOver = (e) => {
     e.preventDefault();
 
@@ -100,8 +141,6 @@ export default function MitigationPlanner() {
       const rowRect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rowRect.left;
       const rawTime = Math.max(0, x / pixelsPerSecond);
-
-      // Use a drag offset to handle picking up from anything other than midpoint
       const startTime = snapToGrid(rawTime - dragOffset);
 
       if (
@@ -155,46 +194,15 @@ export default function MitigationPlanner() {
       startTime = Math.max(0, snapToGrid(rawTime - dragOffset));
     }
 
-    if (startTime + draggedAbility.duration > timeline.duration) {
+    if (completePlacement(startTime, slot)) {
       setDraggedAbility(null);
       setDraggedFrom(null);
       setDragOffset(0);
-      return;
+    } else {
+      setDraggedAbility(null);
+      setDraggedFrom(null);
+      setDragOffset(0);
     }
-
-    const excludeId =
-      draggedFrom === "timeline" ? draggedAbility.placementId : null;
-    const hasConflict = checkCooldownConflict(
-      placements,
-      draggedAbility,
-      startTime,
-      excludeId
-    );
-
-    if (!hasConflict) {
-      if (draggedFrom === "palette") {
-        setPlacements([
-          ...placements,
-          {
-            ...draggedAbility,
-            startTime,
-            placementId: Date.now() + Math.random(),
-          },
-        ]);
-      } else if (draggedFrom === "timeline") {
-        setPlacements(
-          placements.map((p) =>
-            p.placementId === draggedAbility.placementId
-              ? { ...p, startTime }
-              : p
-          )
-        );
-      }
-    }
-
-    setDraggedAbility(null);
-    setDraggedFrom(null);
-    setDragOffset(0);
   };
 
   const removePlacement = (placementId) => {
@@ -219,46 +227,15 @@ export default function MitigationPlanner() {
         setDragPreview(null);
         setIsDraggingOnTimeline(false);
 
-        if (startTime + draggedAbility.duration > timeline.duration) {
+        if (completePlacement(startTime, slot)) {
           setDraggedAbility(null);
           setDraggedFrom(null);
           setDragOffset(0);
-          return;
+        } else {
+          setDraggedAbility(null);
+          setDraggedFrom(null);
+          setDragOffset(0);
         }
-
-        const excludeId =
-          draggedFrom === "timeline" ? draggedAbility.placementId : null;
-        const hasConflict = checkCooldownConflict(
-          placements,
-          draggedAbility,
-          startTime,
-          excludeId
-        );
-
-        if (!hasConflict) {
-          if (draggedFrom === "palette") {
-            setPlacements([
-              ...placements,
-              {
-                ...draggedAbility,
-                startTime,
-                placementId: Date.now() + Math.random(),
-              },
-            ]);
-          } else if (draggedFrom === "timeline") {
-            setPlacements(
-              placements.map((p) =>
-                p.placementId === draggedAbility.placementId
-                  ? { ...p, startTime }
-                  : p
-              )
-            );
-          }
-        }
-
-        setDraggedAbility(null);
-        setDraggedFrom(null);
-        setDragOffset(0);
       }
     };
 

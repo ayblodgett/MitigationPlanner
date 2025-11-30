@@ -15,7 +15,7 @@ export default function TimeMarkers({
     labelWidth
   );
 
-  const labelHeight = 35 / totalLanes;
+  const labelHeight = totalLanes === 1 ? 20 : 35 / totalLanes;
 
   return (
     <div
@@ -30,16 +30,39 @@ export default function TimeMarkers({
       {attacksWithLanes.map((attack) => {
         const laneTop = 5 + attack.lane * labelHeight;
 
+        // Calculate position, adjusting if it would overflow the right edge
+        const idealLeft = attack.time * pixelsPerSecond + labelWidth;
+        const labelWidthPx = attack.estimatedWidth;
+        const timelineRightEdge = timelineWidth + labelWidth;
+
+        // Check if label would overflow right edge when centered
+        const wouldOverflowRight =
+          idealLeft + labelWidthPx / 2 > timelineRightEdge;
+
+        let leftPosition, transform;
+        if (wouldOverflowRight) {
+          // Align right edge of label with timeline right edge
+          leftPosition = timelineRightEdge;
+          transform = "translateX(-100%)";
+        } else {
+          // Center normally
+          leftPosition = idealLeft;
+          transform = "translateX(-50%)";
+        }
+
         return (
           <div
             key={`attack-${attack.id}`}
             className="absolute bg-red-900 px-2 py-1 rounded text-xs whitespace-nowrap"
             style={{
-              left: `${attack.time * pixelsPerSecond + labelWidth}px`,
+              left: `${leftPosition}px`,
               top: `${laneTop}px`,
-              transform: "translateX(-50%)",
+              transform: transform,
               fontSize: totalLanes > 2 ? "10px" : "12px",
-              lineHeight: `${Math.max(12, labelHeight - 4)}px`,
+              lineHeight:
+                totalLanes === 1
+                  ? "16px"
+                  : `${Math.max(12, labelHeight - 4)}px`,
             }}
           >
             {attack.name}
