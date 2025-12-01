@@ -1,7 +1,15 @@
+import { jobIcons, abilityIcons } from "../utils/iconLoader";
+
 // Shared role ablities
 const ROLE_ABILITIES = {
   Tank: [
-    { id: "rampart", name: "Rampart", duration: 20, cooldown: 90 },
+    {
+      id: "rampart",
+      name: "Rampart",
+      icon: abilityIcons.rampart,
+      duration: 20,
+      cooldown: 90,
+    },
     { id: "reprisal", name: "Reprisal", duration: 15, cooldown: 60 },
   ],
   Healer: [],
@@ -21,11 +29,13 @@ export const JOBS = {
   PLD: {
     name: "Paladin",
     role: "Tank",
+    icon: jobIcons.PLD,
     color: "#A8D2E6",
     abilities: [
       {
         id: "sheltron",
         name: "Holy Sheltron",
+        icon: abilityIcons.holySheltron,
         duration: 8,
         cooldown: 5,
         sweetSpotDuration: 4,
@@ -119,6 +129,7 @@ export const JOBS = {
   },
   DRK: {
     name: "Dark Knight",
+    icon: jobIcons.DRK,
     role: "Tank",
     color: "#D126CC",
     abilities: [

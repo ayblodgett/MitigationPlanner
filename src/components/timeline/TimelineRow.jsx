@@ -29,7 +29,6 @@ export default function TimelineRow({
         const laneTop = 10 + placement.lane * laneHeight;
         const actualHeight = laneHeight - 2;
 
-        // Check if this ability is currently being dragged
         const isBeingDragged =
           draggedAbility &&
           draggedAbility.placementId === placement.placementId &&
@@ -37,7 +36,7 @@ export default function TimelineRow({
 
         return (
           <React.Fragment key={placement.placementId}>
-            {/* Original position ghost (shown when dragging) */}
+            {/* Original position ghost */}
             {isBeingDragged && (
               <div
                 className="absolute rounded overflow-hidden pointer-events-none"
@@ -60,11 +59,17 @@ export default function TimelineRow({
                     }}
                   />
                 )}
-
                 <div
-                  className="px-2 py-0.5 relative z-10 flex flex-col justify-center"
+                  className="px-2 py-0.5 relative z-10 flex items-center gap-1"
                   style={{ height: "100%" }}
                 >
+                  {placement.icon && (
+                    <img
+                      src={placement.icon}
+                      alt=""
+                      className="w-4 h-4 flex-shrink-0"
+                    />
+                  )}
                   <div className="text-sm font-semibold truncate">
                     {placement.name}
                   </div>
@@ -76,10 +81,7 @@ export default function TimelineRow({
             <div
               draggable
               onDragStart={(e) => {
-                // Hide tooltip when dragging starts
                 setHoveredAbility(null);
-
-                // Calculate where on the bar the user clicked
                 const barRect = e.currentTarget.getBoundingClientRect();
                 const clickX = e.clientX - barRect.left;
                 const clickOffsetInSeconds = clickX / pixelsPerSecond;
@@ -128,13 +130,22 @@ export default function TimelineRow({
               )}
 
               <div
-                className="px-2 py-0.5 relative z-10 flex flex-col justify-center"
+                className="px-2 py-0.5 relative z-10 flex items-center gap-1"
                 style={{ height: "100%" }}
               >
+                {/* Add icon here */}
+                {placement.icon && (
+                  <img
+                    src={placement.icon}
+                    alt=""
+                    className="w-4 h-4 flex-shrink-0"
+                  />
+                )}
                 <div className="text-sm font-semibold truncate">
                   {placement.name}
                 </div>
               </div>
+
               <button
                 onClick={() => {
                   setHoveredAbility(null);

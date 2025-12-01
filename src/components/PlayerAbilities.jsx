@@ -9,11 +9,15 @@ export default function PlayerAbilities({
 }) {
   const jobId = partyComp[selectedSlot];
   const jobName = jobId ? JOBS[jobId].name : "None";
+  const jobIcon = jobId ? JOBS[jobId].icon : null;
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 mb-6">
-      <h2 className="text-xl font-semibold mb-3">
-        Your Abilities - {SLOT_LABELS[selectedSlot]} ({jobName})
+      <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+        {jobIcon && <img src={jobIcon} alt="" className="w-8 h-8" />}
+        <span>
+          Your Abilities - {SLOT_LABELS[selectedSlot]} ({jobName})
+        </span>
       </h2>
       <div className="flex flex-wrap gap-2">
         {abilities.length > 0 ? (
@@ -25,7 +29,12 @@ export default function PlayerAbilities({
               className="px-3 py-2 rounded cursor-move hover:opacity-80 transition-opacity"
               style={{ backgroundColor: ability.color, color: "#000" }}
             >
-              <div className="font-semibold text-sm">{ability.name}</div>
+              <div className="flex items-center gap-2 mb-1">
+                {ability.icon && (
+                  <img src={ability.icon} alt="" className="w-6 h-6" />
+                )}
+                <div className="font-semibold text-sm">{ability.name}</div>
+              </div>
               <div className="text-xs opacity-75">
                 {ability.duration}s • CD: {ability.cooldown}s
                 {ability.charges &&
