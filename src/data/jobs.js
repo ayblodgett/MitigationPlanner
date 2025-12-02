@@ -1,15 +1,10 @@
-import { jobIcons, abilityIcons } from "../utils/iconLoader";
+import { jobIcons } from "../utils/iconLoader";
+import { assignIcons, processRoleAbilities } from "../utils/abilityHelpers";
 
 // Shared role ablities
-const ROLE_ABILITIES = {
+const ROLE_ABILITIES_RAW = {
   Tank: [
-    {
-      id: "rampart",
-      name: "Rampart",
-      icon: abilityIcons.rampart,
-      duration: 20,
-      cooldown: 90,
-    },
+    { id: "rampart", name: "Rampart", duration: 20, cooldown: 90 },
     { id: "reprisal", name: "Reprisal", duration: 15, cooldown: 60 },
   ],
   Healer: [],
@@ -24,6 +19,8 @@ const ROLE_ABILITIES = {
   Magical_Ranged: [{ id: "addle", name: "Addle", duration: 10, cooldown: 90 }],
 };
 
+const ROLE_ABILITIES = processRoleAbilities(ROLE_ABILITIES_RAW);
+
 // Job-specific abilities
 export const JOBS = {
   PLD: {
@@ -31,11 +28,10 @@ export const JOBS = {
     role: "Tank",
     icon: jobIcons.PLD,
     color: "#A8D2E6",
-    abilities: [
+    abilities: assignIcons([
       {
-        id: "sheltron",
+        id: "holy-sheltron",
         name: "Holy Sheltron",
-        icon: abilityIcons.holySheltron,
         duration: 8,
         cooldown: 5,
         sweetSpotDuration: 4,
@@ -69,7 +65,12 @@ export const JOBS = {
         cooldown: 90,
         isPersonal: true,
       },
-      { id: "divine-veil", name: "Divine Veil", duration: 30, cooldown: 90 },
+      {
+        id: "divine-veil",
+        name: "Divine Veil",
+        duration: 30,
+        cooldown: 90,
+      },
       {
         id: "intervention",
         name: "Intervention",
@@ -78,16 +79,22 @@ export const JOBS = {
         isPersonal: false,
         isTargeted: true,
       },
-      { id: "passage", name: "Passage of Arms", duration: 18, cooldown: 120 },
-    ],
+      {
+        id: "passage-of-arms",
+        name: "Passage of Arms",
+        duration: 18,
+        cooldown: 120,
+      },
+    ]),
   },
   WAR: {
     name: "Warrior",
+    icon: jobIcons.WAR,
     role: "Tank",
     color: "#CF2621",
-    abilities: [
+    abilities: assignIcons([
       {
-        id: "thrill",
+        id: "thrill-of-battle",
         name: "Thrill of Battle",
         duration: 10,
         cooldown: 90,
@@ -115,7 +122,7 @@ export const JOBS = {
         sweetSpotDuration: 4,
         isPersonal: true,
       },
-      { id: "shake", name: "Shake It Off", duration: 30, cooldown: 90 },
+      { id: "shake-it-off", name: "Shake It Off", duration: 30, cooldown: 90 },
       {
         id: "nascent-flash",
         name: "Nascent Flash",
@@ -125,14 +132,14 @@ export const JOBS = {
         isPersonal: false,
         isTargeted: true,
       },
-    ],
+    ]),
   },
   DRK: {
     name: "Dark Knight",
     icon: jobIcons.DRK,
     role: "Tank",
     color: "#D126CC",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "shadowed-vigil",
         name: "Shadowed Vigil",
@@ -163,7 +170,7 @@ export const JOBS = {
       },
       // TODO: TBN can be on self or others, how to handle?
       {
-        id: "tbn",
+        id: "the-blackest-night",
         name: "The Blackest Night",
         duration: 7,
         cooldown: 15,
@@ -179,13 +186,14 @@ export const JOBS = {
         isPersonal: true,
         isTargeted: true,
       },
-    ],
+    ]),
   },
   GNB: {
     name: "Gunbreaker",
+    icon: jobIcons.GNB,
     role: "Tank",
     color: "#796D30",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "camouflage",
         name: "Camouflage",
@@ -222,15 +230,16 @@ export const JOBS = {
         isPersonal: true,
         isTargeted: true,
       },
-    ],
+    ]),
   },
 
   // Healers
   WHM: {
     name: "White Mage",
+    icon: jobIcons.WHM,
     role: "Healer",
     color: "#FFF0DC",
-    abilities: [
+    abilities: assignIcons([
       // TODO: instant effect abilities?
       {
         id: "benediction",
@@ -266,7 +275,7 @@ export const JOBS = {
         isTargeted: true,
       },
       {
-        id: "liturgy",
+        id: "liturgy-of-the-bell",
         name: "Liturgy of the Bell",
         duration: 20,
         cooldown: 180,
@@ -278,14 +287,15 @@ export const JOBS = {
         duration: 10,
         cooldown: 120,
       },
-    ],
+    ]),
   },
   // TODO: shield healer abilities in general lol. succor?
   SCH: {
     name: "Scholar",
+    icon: jobIcons.SCH,
     role: "Healer",
     color: "#8657FF",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "fey-illumination",
         name: "Fey Illumination",
@@ -354,14 +364,15 @@ export const JOBS = {
         cooldown: 180,
         isPersonal: true,
       },
-    ],
+    ]),
   },
   // TODO: ast cards?
   AST: {
     name: "Astrologian",
+    icon: jobIcons.AST,
     role: "Healer",
     color: "#FFE74A",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "lightspeed",
         name: "Lightspeed",
@@ -411,14 +422,15 @@ export const JOBS = {
       },
       { id: "macrocosmos", name: "Macrocosmos", duration: 15, cooldown: 180 },
       { id: "sun-sign", name: "Sun Sign", duration: 15, cooldown: 120 },
-    ],
+    ]),
   },
   SGE: {
     name: "Sage",
+    icon: jobIcons.SGE,
     role: "Healer",
     color: "#80A0F0",
-    abilities: [
-      { id: "physis", name: "Physis", duration: 15, cooldown: 60 },
+    abilities: assignIcons([
+      { id: "physis-II", name: "Physis II", duration: 15, cooldown: 60 },
       {
         id: "soteria",
         name: "Soteria",
@@ -466,15 +478,16 @@ export const JOBS = {
       },
       { id: "pneuma", name: "Pneuma", duration: 2, cooldown: 120 },
       { id: "philosophia", name: "Philosophia", duration: 20, cooldown: 180 },
-    ],
+    ]),
   },
 
   // Melee DPS
   MNK: {
     name: "Monk",
+    icon: jobIcons.MNK,
     role: "Melee",
     color: "#D69C00",
-    abilities: [
+    abilities: assignIcons([
       { id: "mantra", name: "Mantra", duration: 15, cooldown: 90 },
       {
         id: "riddle-of-earth",
@@ -483,19 +496,21 @@ export const JOBS = {
         cooldown: 60,
         isPersonal: true,
       },
-    ],
+    ]),
   },
   DRG: {
     name: "Dragoon",
+    icon: jobIcons.DRG,
     role: "Melee",
     color: "#4164CD",
-    abilities: [],
+    abilities: assignIcons([]),
   },
   NIN: {
     name: "Ninja",
+    icon: jobIcons.NIN,
     role: "Melee",
     color: "#AF1964",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "shade-shift",
         name: "Shade Shift",
@@ -503,13 +518,14 @@ export const JOBS = {
         cooldown: 120,
         isPersonal: true,
       },
-    ],
+    ]),
   },
   SAM: {
     name: "Samurai",
+    icon: jobIcons.SAM,
     role: "Melee",
     color: "#E46D04",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "tengetsu",
         name: "Tengetsu",
@@ -517,13 +533,14 @@ export const JOBS = {
         cooldown: 15,
         isPersonal: true,
       },
-    ],
+    ]),
   },
   RPR: {
     name: "Reaper",
+    icon: jobIcons.RPR,
     role: "Melee",
     color: "#965A90",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "arcane-crest",
         name: "Arcane Crest",
@@ -531,21 +548,23 @@ export const JOBS = {
         cooldown: 30,
         isPersonal: true,
       },
-    ],
+    ]),
   },
   VPR: {
     name: "Viper",
+    icon: jobIcons.VPR,
     role: "Melee",
     color: "#94661F",
-    abilities: [],
+    abilities: assignIcons([]),
   },
 
   // Physical Ranged DPS
   BRD: {
     name: "Bard",
+    icon: jobIcons.BRD,
     role: "Physical_Ranged",
     color: "#91BA5E",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "the-wardens-paean",
         name: "The Warden's Paean",
@@ -566,13 +585,14 @@ export const JOBS = {
         duration: 15,
         cooldown: 120,
       },
-    ],
+    ]),
   },
   MCH: {
     name: "Machinist",
+    icon: jobIcons.MCH,
     role: "Physical_Ranged",
     color: "#6EE1D6",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "tactician",
         name: "Tactician",
@@ -580,13 +600,14 @@ export const JOBS = {
         cooldown: 90,
       },
       { id: "dismantle", name: "Dismantle", duration: 10, cooldown: 120 },
-    ],
+    ]),
   },
   DNC: {
     name: "Dancer",
+    icon: jobIcons.DNC,
     role: "Physical_Ranged",
     color: "#E2B0AF",
-    abilities: [
+    abilities: assignIcons([
       { id: "curing-waltz", name: "Curing Waltz", duration: 2, cooldown: 60 },
       {
         id: "shield-samba",
@@ -600,15 +621,16 @@ export const JOBS = {
         duration: 30,
         cooldown: 120,
       },
-    ],
+    ]),
   },
 
   // Magical Ranged DPS
   BLM: {
     name: "Black Mage",
+    icon: jobIcons.BLM,
     role: "Magical_Ranged",
     color: "#A579D6",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "manaward",
         name: "Manaward",
@@ -616,13 +638,14 @@ export const JOBS = {
         cooldown: 120,
         isPersonal: true,
       },
-    ],
+    ]),
   },
   SMN: {
     name: "Summoner",
+    icon: jobIcons.SMN,
     role: "Magical_Ranged",
     color: "#2D9B78",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "radiant-aegis",
         name: "Radiant Aegis",
@@ -645,26 +668,28 @@ export const JOBS = {
         duration: 2,
         cooldown: 60,
       },
-    ],
+    ]),
   },
   RDM: {
     name: "Red Mage",
+    icon: jobIcons.RDM,
     role: "Magical_Ranged",
     color: "#E87B7B",
-    abilities: [
+    abilities: assignIcons([
       {
         id: "magick-barrier",
         name: "Magick Barrier",
         duration: 10,
         cooldown: 120,
       },
-    ],
+    ]),
   },
   PCT: {
     name: "Pictomancer",
+    icon: jobIcons.PCT,
     role: "Magical_Ranged",
     color: "#D4D422",
-    abilities: [
+    abilities: assignIcons([
       // TODO: coat/grassa cd are really awkward, idk what to do here rn
       { id: "tempera-coat", name: "Tempera Coat", duration: 10, cooldown: 60 },
       {
@@ -673,7 +698,7 @@ export const JOBS = {
         duration: 10,
         cooldown: 90,
       },
-    ],
+    ]),
   },
 };
 

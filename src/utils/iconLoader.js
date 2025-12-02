@@ -1,28 +1,32 @@
 /**
  * Utility to auto-import icons from assets folder
- * Supports jobs and abilities
+ * Supports jobs and abilities (shared + job-specific)
  */
 
-// Auto-import all job icons
+// Job icons
 const jobIconModules = import.meta.glob("../assets/icons/jobs/*.png", {
   eager: true,
 });
 
-// Auto-import all ability icons
-const abilityIconModules = import.meta.glob("../assets/icons/abilities/*.png", {
-  eager: true,
-});
+// Shared ability icons (role abilities)
+const sharedAbilityModules = import.meta.glob(
+  "../assets/icons/abilities/Shared/*.png",
+  {
+    eager: true,
+  }
+);
 
-/**
- * Convert glob import results to { id: path } object
- * @param {Object} modules - Result from import.meta.glob
- * @returns {Object} - { iconId: iconPath }
- */
+// Job-specific ability icons (all subfolders)
+const jobAbilityModules = import.meta.glob(
+  "../assets/icons/abilities/*/*.png",
+  {
+    eager: true,
+  }
+);
+
 function parseIconModules(modules) {
   return Object.fromEntries(
     Object.entries(modules).map(([path, module]) => {
-      // Extract filename without extension
-      // e.g., "../assets/icons/jobs/PLD.png" → "PLD"
       const id = path.match(/\/([^/]+)\.png$/)[1];
       return [id, module.default];
     })
@@ -30,15 +34,29 @@ function parseIconModules(modules) {
 }
 
 export const jobIcons = parseIconModules(jobIconModules);
-export const abilityIcons = parseIconModules(abilityIconModules);
+const sharedAbilityIcons = parseIconModules(sharedAbilityModules);
+const jobSpecificAbilityIcons = parseIconModules(jobAbilityModules);
+
+// Combine shared and job-specific abilities
+export const abilityIcons = {
+  ...sharedAbilityIcons,
+  ...jobSpecificAbilityIcons,
+};
 
 /**
- * Get icon path by ID, with fallback
- * @param {string} id - Icon identifier
- * @param {string} type - 'job' or 'ability'
- * @returns {string} - Icon path or placeholder
+ * Get icon for an ability by ID
+ * @param {string} abilityId - The ability's ID (e.g., "divine-veil")
+ * @returns {string|null} - Icon path or null if not found
  */
-export function getIcon(id, type = "ability") {
-  const icons = type === "job" ? jobIcons : abilityIcons;
-  return icons[id] || null; // Return null if not found
+export function getAbilityIcon(abilityId) {
+  return abilityIcons[abilityId] || null;
+}
+
+/**
+ * Get icon for a job by ID
+ * @param {string} jobId - The job's ID (e.g., "PLD")
+ * @returns {string|null} - Icon path or null if not found
+ */
+export function getJobIcon(jobId) {
+  return jobIcons[jobId] || null;
 }

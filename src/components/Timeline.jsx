@@ -5,11 +5,11 @@ import { ROW_HEIGHT, PIXELS_PER_SECOND } from "../data/bossTimelines";
 import { useTimelineZoom } from "../hooks/useTimelineZoom";
 import { useTimelinePan } from "../hooks/useTimelinePan";
 import { calculateAbilityLanes } from "../utils/laneCalculations";
-import TimeMarkers from "./Timeline/TimeMarkers";
-import TimelineRow from "./Timeline/TimelineRow";
-import PartyList from "./Timeline/PartyList";
-import AbilityTooltip from "./Timeline/AbilityTooltip";
-import DragPreview from "./Timeline/DragPreview";
+import TimeMarkers from "./timeline/TimeMarkers";
+import TimelineRow from "./timeline/TimelineRow";
+import PartyList from "./timeline/PartyList";
+import AbilityTooltip from "./timeline/AbilityTooltip";
+import DragPreview from "./timeline/DragPreview";
 
 export default function Timeline({
   timeline,
@@ -184,7 +184,9 @@ export default function Timeline({
                         dragPreview={dragPreview}
                         slot={slot}
                         draggedAbility={draggedAbility}
+                        draggedFrom={draggedFrom}
                         pixelsPerSecond={pixelsPerSecond}
+                        placements={slotPlacements}
                       />
 
                       {/* Placed abilities */}
