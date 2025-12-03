@@ -11,12 +11,16 @@ import {
   getAbilitiesForSlot,
 } from "./utils/cooldownCalculations";
 import { loadPlan, savePlan } from "./utils/planStorage";
+import {
+  snapToValidZone,
+  calculateValidDropZones,
+} from "./utils/validDropZones";
 
 export default function MitigationPlanner() {
   const [partyComp, setPartyComp] = useState({
     tank1: "PLD",
     tank2: "WAR",
-    healer1: "WHM",
+    healer1: "AST",
     healer2: "SCH",
     dps1: "DRG",
     dps2: "RDM",
@@ -186,12 +190,36 @@ export default function MitigationPlanner() {
 
     let startTime;
     if (previewToUse && previewToUse.slot === slot) {
-      startTime = previewToUse.startTime;
+      // Use the preview time, but snap it to valid zones
+      const excludeId =
+        draggedFrom === "timeline" ? draggedAbility.placementId : null;
+      const validZones = calculateValidDropZones(
+        placements,
+        draggedAbility,
+        timeline.duration,
+        excludeId
+      );
+      startTime = snapToValidZone(
+        previewToUse.startTime,
+        validZones,
+        draggedAbility
+      );
     } else {
       const rowRect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rowRect.left;
       const rawTime = Math.max(0, x / pixelsPerSecond);
-      startTime = Math.max(0, snapToGrid(rawTime - dragOffset));
+      const unsnappedTime = Math.max(0, snapToGrid(rawTime - dragOffset));
+
+      // Snap to valid zones
+      const excludeId =
+        draggedFrom === "timeline" ? draggedAbility.placementId : null;
+      const validZones = calculateValidDropZones(
+        placements,
+        draggedAbility,
+        timeline.duration,
+        excludeId
+      );
+      startTime = snapToValidZone(unsnappedTime, validZones, draggedAbility);
     }
 
     if (completePlacement(startTime, slot)) {
@@ -222,7 +250,21 @@ export default function MitigationPlanner() {
         e.preventDefault();
 
         const slot = draggedAbility.slot;
-        const startTime = dragPreview.startTime;
+
+        // Snap the preview time to valid zones before placing
+        const excludeId =
+          draggedFrom === "timeline" ? draggedAbility.placementId : null;
+        const validZones = calculateValidDropZones(
+          placements,
+          draggedAbility,
+          timeline.duration,
+          excludeId
+        );
+        const startTime = snapToValidZone(
+          dragPreview.startTime,
+          validZones,
+          draggedAbility
+        );
 
         setDragPreview(null);
         setIsDraggingOnTimeline(false);

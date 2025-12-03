@@ -1,15 +1,20 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { RotateCcw } from "lucide-react";
 import { PARTY_SLOTS } from "../data/jobs";
 import { ROW_HEIGHT, PIXELS_PER_SECOND } from "../data/bossTimelines";
 import { useTimelineZoom } from "../hooks/useTimelineZoom";
 import { useTimelinePan } from "../hooks/useTimelinePan";
 import { calculateAbilityLanes } from "../utils/laneCalculations";
+import {
+  calculateValidDropZones,
+  snapToValidZone,
+} from "../utils/validDropZones";
 import TimeMarkers from "./timeline/TimeMarkers";
 import TimelineRow from "./timeline/TimelineRow";
 import PartyList from "./timeline/PartyList";
 import AbilityTooltip from "./timeline/AbilityTooltip";
 import DragPreview from "./timeline/DragPreview";
+import ValidDropZones from "./timeline/ValidDropZones";
 
 export default function Timeline({
   timeline,
@@ -35,6 +40,21 @@ export default function Timeline({
 
   const timelineWidth = timeline.duration * pixelsPerSecond;
   const labelWidth = 128;
+
+  // Calculate valid drop zones for dragged ability
+  const validDropZones = useMemo(() => {
+    if (!draggedAbility) return null;
+
+    const excludeId =
+      draggedFrom === "timeline" ? draggedAbility.placementId : null;
+
+    return calculateValidDropZones(
+      placements,
+      draggedAbility,
+      timeline.duration,
+      excludeId
+    );
+  }, [draggedAbility, placements, timeline.duration, draggedFrom]);
 
   // Calculate minimum zoom to fill container
   const [minZoom, setMinZoom] = useState(1);
@@ -87,6 +107,24 @@ export default function Timeline({
     { length: Math.floor(timeline.duration / markerInterval) + 1 },
     (_, i) => i * markerInterval
   );
+
+  // Snap drag preview to valid zones
+  const getSnappedDragPreview = () => {
+    if (!dragPreview || !validDropZones) return dragPreview;
+
+    const snappedTime = snapToValidZone(
+      dragPreview.startTime,
+      validDropZones,
+      draggedAbility
+    );
+
+    return {
+      ...dragPreview,
+      startTime: snappedTime,
+    };
+  };
+
+  const snappedDragPreview = getSnappedDragPreview();
 
   return (
     <div className="bg-gray-800 rounded-lg p-4">
@@ -166,6 +204,15 @@ export default function Timeline({
                       onDragLeave={onDragLeave}
                       onDrop={(e) => onDropOnRow(e, slot)}
                     >
+                      {/* Valid drop zones overlay */}
+                      <ValidDropZones
+                        validZones={validDropZones}
+                        pixelsPerSecond={pixelsPerSecond}
+                        timelineDuration={timeline.duration}
+                        slot={slot}
+                        draggedAbility={draggedAbility}
+                      />
+
                       {/* Boss attack vertical lines */}
                       {timeline.attacks.map((attack, idx) => (
                         <div
@@ -181,7 +228,7 @@ export default function Timeline({
 
                       {/* Click and drag preview */}
                       <DragPreview
-                        dragPreview={dragPreview}
+                        dragPreview={snappedDragPreview}
                         slot={slot}
                         draggedAbility={draggedAbility}
                         draggedFrom={draggedFrom}
