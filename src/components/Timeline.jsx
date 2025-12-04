@@ -14,6 +14,7 @@ import TimelineRow from "./timeline/TimelineRow";
 import PartyList from "./timeline/PartyList";
 import AbilityTooltip from "./timeline/AbilityTooltip";
 import DragPreview from "./timeline/DragPreview";
+import DragTooltip from "./timeline/DragTooltip";
 import ValidDropZones from "./timeline/ValidDropZones";
 
 export default function Timeline({
@@ -228,7 +229,7 @@ export default function Timeline({
                         />
                       ))}
 
-                      {/* Click and drag preview */}
+                      {/* Click and drag preview (without tooltip) */}
                       <DragPreview
                         dragPreview={snappedDragPreview}
                         slot={slot}
@@ -236,6 +237,7 @@ export default function Timeline({
                         draggedFrom={draggedFrom}
                         pixelsPerSecond={pixelsPerSecond}
                         placements={slotPlacements}
+                        showTooltip={false}
                       />
 
                       {/* Placed abilities */}
@@ -252,6 +254,20 @@ export default function Timeline({
                         draggedFrom={draggedFrom}
                       />
                     </div>
+
+                    {/* Drag timestamp tooltip - positioned outside clipped zone */}
+                    {snappedDragPreview &&
+                      snappedDragPreview.slot === slot &&
+                      draggedAbility && (
+                        <DragTooltip
+                          dragPreview={snappedDragPreview}
+                          draggedAbility={draggedAbility}
+                          pixelsPerSecond={pixelsPerSecond}
+                          labelWidth={labelWidth}
+                          placements={slotPlacements}
+                          draggedFrom={draggedFrom}
+                        />
+                      )}
                   </div>
                 );
               }
