@@ -8,12 +8,31 @@ export default function ValidDropZones({
   slot,
   draggedAbility,
 }) {
-  // Only show zones if we're dragging an ability that matches this slot
-  if (!validZones || !draggedAbility || draggedAbility.slot !== slot) {
+  // Only show zones if we're dragging an ability
+  if (!validZones || !draggedAbility) {
     return null;
   }
 
-  // Create invalid zone overlays (areas between valid zones)
+  const isDraggedSlot = draggedAbility.slot === slot;
+
+  // If this is NOT the dragged ability's slot, darken the entire row
+  if (!isDraggedSlot) {
+    return (
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: 0,
+          width: "100%",
+          top: 0,
+          height: `${ROW_HEIGHT}px`,
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
+          zIndex: 5,
+        }}
+      />
+    );
+  }
+
+  // For the dragged ability's slot, show invalid zones
   const invalidZones = [];
   let lastEnd = 0;
 
@@ -48,7 +67,7 @@ export default function ValidDropZones({
             width: `${(zone.end - zone.start) * pixelsPerSecond}px`,
             top: 0,
             height: `${ROW_HEIGHT}px`,
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
             zIndex: 5,
           }}
         />

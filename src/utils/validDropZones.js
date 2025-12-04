@@ -27,7 +27,7 @@ export function calculateValidDropZones(
 
   const maxCharges = ability.charges || 1;
 
-  // For single-charge abilities, use simple cooldown blocking
+  // Single-charge abilities
   if (maxCharges === 1) {
     return calculateSimpleValidZones(
       existingPlacements,
@@ -36,7 +36,7 @@ export function calculateValidDropZones(
     );
   }
 
-  // For multi-charge abilities, use simulation-based approach
+  // Multi-charge abilities
   return calculateMultiChargeValidZones(
     existingPlacements,
     ability,
@@ -54,28 +54,60 @@ function calculateSimpleValidZones(
   timelineDuration
 ) {
   const validZones = [];
+  const maxEndTime = timelineDuration - ability.duration;
+
+  // For each existing placement, it blocks:
+  // - From (startTime - cooldown) to startTime
+  // - From startTime to (startTime + cooldown)
+  const blockedRanges = existingPlacements.map((p) => ({
+    start: Math.max(0, p.startTime - ability.cooldown),
+    end: Math.min(maxEndTime, p.startTime + ability.cooldown),
+  }));
+
+  // Sort and merge overlapping blocked ranges
+  const mergedBlocked = mergeRanges(blockedRanges);
+
+  // Valid zones are the gaps between blocked ranges
   let currentStart = 0;
 
-  for (const placement of existingPlacements) {
-    const blockStart = placement.startTime;
-    const blockEnd = placement.startTime + ability.cooldown;
-
-    // Add zone before this blocked period if there's space
-    if (currentStart < blockStart) {
-      validZones.push({ start: currentStart, end: blockStart });
+  for (const blocked of mergedBlocked) {
+    if (currentStart < blocked.start) {
+      validZones.push({ start: currentStart, end: blocked.start });
     }
-
-    // Move start past this blocked period
-    currentStart = Math.max(currentStart, blockEnd);
+    currentStart = Math.max(currentStart, blocked.end);
   }
 
-  // Add final zone after last placement
-  const maxEndTime = timelineDuration - ability.duration;
+  // Add final zone after last blocked range
   if (currentStart <= maxEndTime) {
     validZones.push({ start: currentStart, end: maxEndTime });
   }
 
   return validZones;
+}
+
+/**
+ * Merge overlapping ranges
+ */
+function mergeRanges(ranges) {
+  if (ranges.length === 0) return [];
+
+  const sorted = [...ranges].sort((a, b) => a.start - b.start);
+  const merged = [sorted[0]];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const current = sorted[i];
+    const last = merged[merged.length - 1];
+
+    if (current.start <= last.end) {
+      // Overlapping ranges, merge them
+      last.end = Math.max(last.end, current.end);
+    } else {
+      // Non-overlapping, add as new range
+      merged.push(current);
+    }
+  }
+
+  return merged;
 }
 
 /**
@@ -172,11 +204,48 @@ function testMultiChargePlacement(
 
 /**
  * Snap a time value to the nearest valid drop zone boundary or stay within zone
+ * Also snaps to timeline start (0) and end boundaries
  */
 export function snapToValidZone(time, validZones, ability) {
   if (!validZones || validZones.length === 0) return time;
 
-  // Find which zone this time falls into
+  // Collect all snap points: zone boundaries + timeline boundaries
+  const snapPoints = [0]; // Always include timeline start
+
+  validZones.forEach((zone) => {
+    snapPoints.push(zone.start, zone.end);
+  });
+
+  // Add timeline end
+  const lastZone = validZones[validZones.length - 1];
+  if (lastZone && lastZone.end !== snapPoints[snapPoints.length - 1]) {
+    snapPoints.push(lastZone.end);
+  }
+
+  // Remove duplicates and sort
+  const uniqueSnapPoints = [...new Set(snapPoints)].sort((a, b) => a - b);
+
+  // Define snap threshold (in seconds) - snap if within this distance
+  const snapThreshold = 2;
+
+  // Find the closest snap point within threshold
+  let closestSnap = null;
+  let closestDistance = Infinity;
+
+  for (const snapPoint of uniqueSnapPoints) {
+    const distance = Math.abs(time - snapPoint);
+    if (distance <= snapThreshold && distance < closestDistance) {
+      closestDistance = distance;
+      closestSnap = snapPoint;
+    }
+  }
+
+  // If we found a close snap point, use it
+  if (closestSnap !== null) {
+    return closestSnap;
+  }
+
+  // Otherwise, check if we're in a valid zone
   for (const zone of validZones) {
     if (time >= zone.start && time <= zone.end) {
       // Already in valid zone, no snapping needed
@@ -190,6 +259,5 @@ export function snapToValidZone(time, validZones, ability) {
   }
 
   // If we're past all zones, snap to the end of the last zone
-  const lastZone = validZones[validZones.length - 1];
   return lastZone.end;
 }

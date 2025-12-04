@@ -37,6 +37,7 @@ export default function Timeline({
   const timelineWrapperRef = useRef(null);
   const [hoveredAbility, setHoveredAbility] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [minZoom, setMinZoom] = useState(1);
 
   const timelineWidth = timeline.duration * pixelsPerSecond;
   const labelWidth = 128;
@@ -56,9 +57,23 @@ export default function Timeline({
     );
   }, [draggedAbility, placements, timeline.duration, draggedFrom]);
 
-  // Calculate minimum zoom to fill container
-  const [minZoom, setMinZoom] = useState(1);
+  // Snap drag preview to valid zones
+  const snappedDragPreview = useMemo(() => {
+    if (!dragPreview || !validDropZones) return dragPreview;
 
+    const snappedTime = snapToValidZone(
+      dragPreview.startTime,
+      validDropZones,
+      draggedAbility
+    );
+
+    return {
+      ...dragPreview,
+      startTime: snappedTime,
+    };
+  }, [dragPreview, validDropZones, draggedAbility]);
+
+  // Calculate minimum zoom to fill container
   useEffect(() => {
     const updateMinZoom = () => {
       if (timelineWrapperRef.current) {
@@ -89,7 +104,7 @@ export default function Timeline({
   const { isPanning, handleMouseDown } = useTimelinePan(timelineContainerRef);
 
   // Dynamic marker interval based on zoom level
-  const getMarkerInterval = () => {
+  const markerInterval = useMemo(() => {
     const pixelsPerMarker = 100;
     const secondsPerMarker = pixelsPerMarker / pixelsPerSecond;
 
@@ -100,31 +115,16 @@ export default function Timeline({
     if (secondsPerMarker <= 90) return 60;
     if (secondsPerMarker <= 180) return 120;
     return 300;
-  };
+  }, [pixelsPerSecond]);
 
-  const markerInterval = getMarkerInterval();
-  const timeMarkers = Array.from(
-    { length: Math.floor(timeline.duration / markerInterval) + 1 },
-    (_, i) => i * markerInterval
+  const timeMarkers = useMemo(
+    () =>
+      Array.from(
+        { length: Math.floor(timeline.duration / markerInterval) + 1 },
+        (_, i) => i * markerInterval
+      ),
+    [timeline.duration, markerInterval]
   );
-
-  // Snap drag preview to valid zones
-  const getSnappedDragPreview = () => {
-    if (!dragPreview || !validDropZones) return dragPreview;
-
-    const snappedTime = snapToValidZone(
-      dragPreview.startTime,
-      validDropZones,
-      draggedAbility
-    );
-
-    return {
-      ...dragPreview,
-      startTime: snappedTime,
-    };
-  };
-
-  const snappedDragPreview = getSnappedDragPreview();
 
   return (
     <div className="bg-gray-800 rounded-lg p-4">
@@ -154,6 +154,7 @@ export default function Timeline({
             cursor: isPanning ? "grabbing" : "grab",
             scrollbarWidth: "none",
             msOverflowStyle: "none",
+            overflowY: "hidden",
           }}
           onMouseDown={handleMouseDown}
         >
@@ -191,7 +192,7 @@ export default function Timeline({
                   >
                     {/* Drop zone */}
                     <div
-                      className="relative bg-gray-700 rounded"
+                      className="relative bg-gray-700 rounded overflow-hidden"
                       style={{
                         width: `${timelineWidth}px`,
                         height: `${ROW_HEIGHT}px`,
@@ -199,6 +200,7 @@ export default function Timeline({
                         backgroundImage: `repeating-linear-gradient(90deg, #4a5568 0px, #4a5568 1px, transparent 1px, transparent ${
                           pixelsPerSecond * 5
                         }px)`,
+                        clipPath: `inset(0 0 0 0)`,
                       }}
                       onDragOver={onDragOver}
                       onDragLeave={onDragLeave}

@@ -40,7 +40,7 @@ export default function TimelineRow({
             {/* Original position ghost (shown when dragging) */}
             {isBeingDragged && (
               <div
-                className="absolute rounded overflow-hidden pointer-events-none"
+                className="absolute rounded pointer-events-none overflow-visible"
                 style={{
                   left: `${placement.startTime * pixelsPerSecond}px`,
                   width: `${placement.duration * pixelsPerSecond}px`,
@@ -137,6 +137,7 @@ export default function TimelineRow({
                   style={{
                     zIndex: 10,
                     height: `${actualHeight}px`,
+                    width: `${Math.max(actualHeight, 20)}px`,
                     minHeight: "20px",
                   }}
                 >
