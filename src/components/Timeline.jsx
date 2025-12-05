@@ -229,7 +229,7 @@ export default function Timeline({
                         />
                       ))}
 
-                      {/* Click and drag preview (without tooltip) */}
+                      {/* Click and drag preview */}
                       <DragPreview
                         dragPreview={snappedDragPreview}
                         slot={slot}
@@ -252,10 +252,11 @@ export default function Timeline({
                         placements={placements}
                         draggedAbility={draggedAbility}
                         draggedFrom={draggedFrom}
+                        timelineDuration={timeline.duration}
                       />
                     </div>
 
-                    {/* Drag timestamp tooltip - positioned outside clipped zone */}
+                    {/* Drag timestamp tooltip */}
                     {snappedDragPreview &&
                       snappedDragPreview.slot === slot &&
                       draggedAbility && (
@@ -283,6 +284,7 @@ export default function Timeline({
       <AbilityTooltip
         hoveredAbility={hoveredAbility}
         tooltipPosition={tooltipPosition}
+        timelineDuration={timeline.duration}
       />
     </div>
   );

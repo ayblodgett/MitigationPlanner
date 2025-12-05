@@ -54,7 +54,7 @@ function calculateSimpleValidZones(
   timelineDuration
 ) {
   const validZones = [];
-  const maxEndTime = timelineDuration - ability.duration;
+  const maxEndTime = timelineDuration;
 
   // For each existing placement, it blocks:
   // - From (startTime - cooldown) to startTime
@@ -120,7 +120,7 @@ function calculateMultiChargeValidZones(
   timelineDuration,
   maxCharges
 ) {
-  const maxEndTime = timelineDuration - ability.duration;
+  const maxEndTime = timelineDuration;
   const validZones = [];
   let currentZoneStart = null;
 
@@ -209,18 +209,12 @@ function testMultiChargePlacement(
 export function snapToValidZone(time, validZones, ability) {
   if (!validZones || validZones.length === 0) return time;
 
-  // Collect all snap points: zone boundaries + timeline boundaries
+  // Collect all snap points: zone boundaries + timeline start
   const snapPoints = [0]; // Always include timeline start
 
   validZones.forEach((zone) => {
     snapPoints.push(zone.start, zone.end);
   });
-
-  // Add timeline end
-  const lastZone = validZones[validZones.length - 1];
-  if (lastZone && lastZone.end !== snapPoints[snapPoints.length - 1]) {
-    snapPoints.push(lastZone.end);
-  }
 
   // Remove duplicates and sort
   const uniqueSnapPoints = [...new Set(snapPoints)].sort((a, b) => a - b);
@@ -258,6 +252,7 @@ export function snapToValidZone(time, validZones, ability) {
     }
   }
 
-  // If we're past all zones, snap to the end of the last zone
-  return lastZone.end;
+  // If we're past all zones, return the time as-is (allow beyond timeline)
+  const lastZone = validZones[validZones.length - 1];
+  return time > lastZone.end ? time : lastZone.end;
 }

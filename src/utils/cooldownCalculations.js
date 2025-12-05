@@ -102,3 +102,14 @@ export function formatTime(seconds) {
   const secs = seconds % 60;
   return `${mins}:${String(secs).padStart(2, "0")}`;
 }
+
+/**
+ * Get the effective duration of an ability, clipped to timeline end
+ */
+export function getEffectiveDuration(placement, timelineDuration) {
+  const endTime = placement.startTime + placement.duration;
+  if (endTime > timelineDuration) {
+    return timelineDuration - placement.startTime;
+  }
+  return placement.duration;
+}

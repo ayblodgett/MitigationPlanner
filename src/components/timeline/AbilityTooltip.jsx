@@ -1,8 +1,21 @@
 import React from "react";
-import { formatTime } from "../../utils/cooldownCalculations";
+import {
+  formatTime,
+  getEffectiveDuration,
+} from "../../utils/cooldownCalculations";
 
-export default function AbilityTooltip({ hoveredAbility, tooltipPosition }) {
+export default function AbilityTooltip({
+  hoveredAbility,
+  tooltipPosition,
+  timelineDuration,
+}) {
   if (!hoveredAbility) return null;
+
+  const effectiveDuration = getEffectiveDuration(
+    hoveredAbility,
+    timelineDuration
+  );
+  const isClipped = effectiveDuration < hoveredAbility.duration;
 
   return (
     <div
@@ -17,7 +30,15 @@ export default function AbilityTooltip({ hoveredAbility, tooltipPosition }) {
       <div className="font-semibold text-white mb-1">{hoveredAbility.name}</div>
       <div className="text-gray-300 text-xs space-y-1">
         <div>Job: {hoveredAbility.jobName}</div>
-        <div>Duration: {hoveredAbility.duration}s</div>
+        <div>
+          Duration: {hoveredAbility.duration}s
+          {isClipped && (
+            <span className="text-yellow-400">
+              {" "}
+              (clipped to {effectiveDuration}s)
+            </span>
+          )}
+        </div>
         <div>Cooldown: {hoveredAbility.cooldown}s</div>
         {hoveredAbility.charges && hoveredAbility.charges > 1 && (
           <div>Charges: {hoveredAbility.charges}</div>
@@ -27,7 +48,15 @@ export default function AbilityTooltip({ hoveredAbility, tooltipPosition }) {
         )}
         <div className="border-t border-gray-600 pt-1 mt-1">
           Placed: {formatTime(hoveredAbility.startTime)} -{" "}
-          {formatTime(hoveredAbility.startTime + hoveredAbility.duration)}
+          {formatTime(
+            Math.min(
+              hoveredAbility.startTime + hoveredAbility.duration,
+              timelineDuration
+            )
+          )}
+        </div>
+        <div className="text-gray-500 italic text-[10px]">
+          Right-click to delete
         </div>
       </div>
     </div>

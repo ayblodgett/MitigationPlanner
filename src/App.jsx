@@ -93,13 +93,12 @@ export default function MitigationPlanner() {
     return Math.round(time);
   };
 
-  // Extracted function to handle placement logic (eliminates duplication)
   const completePlacement = (startTime, slot) => {
     if (!draggedAbility || draggedAbility.slot !== slot) {
       return false;
     }
 
-    if (startTime + draggedAbility.duration > timeline.duration) {
+    if (startTime < 0 || startTime > timeline.duration) {
       return false;
     }
 
@@ -147,10 +146,8 @@ export default function MitigationPlanner() {
       const rawTime = Math.max(0, x / pixelsPerSecond);
       const startTime = snapToGrid(rawTime - dragOffset);
 
-      if (
-        startTime >= 0 &&
-        startTime + draggedAbility.duration <= timeline.duration
-      ) {
+      // Only check if start time is within timeline bounds
+      if (startTime >= 0 && startTime <= timeline.duration) {
         setDragPreview({
           startTime,
           slot: draggedAbility.slot,
@@ -190,7 +187,6 @@ export default function MitigationPlanner() {
 
     let startTime;
     if (previewToUse && previewToUse.slot === slot) {
-      // Use the preview time, but snap it to valid zones
       const excludeId =
         draggedFrom === "timeline" ? draggedAbility.placementId : null;
       const validZones = calculateValidDropZones(

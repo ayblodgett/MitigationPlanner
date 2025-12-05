@@ -1,7 +1,9 @@
 import React from "react";
-import { Trash2 } from "lucide-react";
 import { ROW_HEIGHT } from "../../data/bossTimelines";
-import { checkCooldownConflict } from "../../utils/cooldownCalculations";
+import {
+  checkCooldownConflict,
+  getEffectiveDuration,
+} from "../../utils/cooldownCalculations";
 
 export default function TimelineRow({
   slot,
@@ -14,15 +16,26 @@ export default function TimelineRow({
   placements,
   draggedAbility,
   draggedFrom,
+  timelineDuration,
 }) {
   return (
     <>
       {placementsWithLanes.map((placement) => {
+        // Calculate effective duration (clipped to timeline end)
+        const effectiveDuration = getEffectiveDuration(
+          placement,
+          timelineDuration
+        );
+        const visualWidth = effectiveDuration * pixelsPerSecond;
+
         const hasSweetSpot =
           placement.sweetSpotDuration && placement.sweetSpotDuration > 0;
-        const sweetSpotWidth = hasSweetSpot
-          ? placement.sweetSpotDuration * pixelsPerSecond
+
+        // Clip sweet spot if it extends beyond effective duration
+        const effectiveSweetSpot = hasSweetSpot
+          ? Math.min(placement.sweetSpotDuration, effectiveDuration)
           : 0;
+        const sweetSpotWidth = effectiveSweetSpot * pixelsPerSecond;
 
         const totalLanes = placement.totalLanes;
         const laneHeight = (ROW_HEIGHT - 20) / totalLanes;
@@ -43,14 +56,14 @@ export default function TimelineRow({
                 className="absolute rounded pointer-events-none overflow-visible"
                 style={{
                   left: `${placement.startTime * pixelsPerSecond}px`,
-                  width: `${placement.duration * pixelsPerSecond}px`,
+                  width: `${visualWidth}px`,
                   top: `${laneTop}px`,
                   height: `${actualHeight}px`,
                   backgroundColor: placement.color,
                   opacity: 0.3,
                 }}
               >
-                {hasSweetSpot && (
+                {hasSweetSpot && effectiveSweetSpot > 0 && (
                   <div
                     className="absolute top-0 left-0 h-full"
                     style={{
@@ -87,6 +100,11 @@ export default function TimelineRow({
                 const clickOffsetInSeconds = clickX / pixelsPerSecond;
                 onDragStart(placement, "timeline", clickOffsetInSeconds);
               }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setHoveredAbility(null);
+                onRemovePlacement(placement.placementId);
+              }}
               onMouseEnter={(e) => {
                 setHoveredAbility(placement);
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -101,7 +119,7 @@ export default function TimelineRow({
               className="absolute rounded cursor-move group ability-block"
               style={{
                 left: `${placement.startTime * pixelsPerSecond}px`,
-                width: `${placement.duration * pixelsPerSecond}px`,
+                width: `${visualWidth}px`,
                 top: `${laneTop}px`,
                 height: `${actualHeight}px`,
                 backgroundColor: placement.color,
@@ -120,7 +138,7 @@ export default function TimelineRow({
               }}
             >
               {/* Sweet spot indicator */}
-              {hasSweetSpot && (
+              {hasSweetSpot && effectiveSweetSpot > 0 && (
                 <div
                   className="absolute top-0 left-0 h-full pointer-events-none"
                   style={{
@@ -152,18 +170,6 @@ export default function TimelineRow({
                   />
                 </div>
               )}
-
-              {/* Delete button - only visible on hover */}
-              <button
-                onClick={() => {
-                  setHoveredAbility(null);
-                  onRemovePlacement(placement.placementId);
-                }}
-                className="absolute top-1/2 -translate-y-1/2 right-1 opacity-0 group-hover:opacity-100 bg-red-600 hover:bg-red-700 rounded p-0.5 z-20 transition-opacity"
-                title={`Remove ${placement.name}`}
-              >
-                <Trash2 size={10} />
-              </button>
             </div>
           </React.Fragment>
         );
